@@ -17,21 +17,21 @@ export default function Home() {
       id: "tinewonsa",
       title: "The Tinewonsa Project",
       desc: "Revolutionizing primary healthcare delivery in rural Africa through community-led clinical hubs.",
-      img: PlaceHolderImages.find(i => i.id === 'initiative-tinewonsa')?.imageUrl,
+      img: PlaceHolderImages.find(i => i.id === 'initiative-tinewonsa')?.imageUrl || "https://picsum.photos/seed/tinewonsa/600/400",
       category: "Healthcare Delivery"
     },
     {
       id: "dollar-a-day",
       title: "Dollar-A-Day Campaign",
       desc: "Sustainable micro-philanthropy enabling continuous funding for essential medical supplies and child nutrition.",
-      img: PlaceHolderImages.find(i => i.id === 'initiative-fieldschool')?.imageUrl,
+      img: PlaceHolderImages.find(i => i.id === 'initiative-fieldschool')?.imageUrl || "https://picsum.photos/seed/fieldschool/600/400",
       category: "Sustainable Giving"
     },
     {
       id: "field-school",
       title: "African Field School",
       desc: "Practical medical education for international students focusing on tropical medicine and public health.",
-      img: PlaceHolderImages.find(i => i.id === 'youth-empowerment')?.imageUrl,
+      img: PlaceHolderImages.find(i => i.id === 'youth-empowerment')?.imageUrl || "https://picsum.photos/seed/field-school/600/400",
       category: "Education"
     }
   ];
@@ -49,6 +49,9 @@ export default function Home() {
     { title: "Partnership-Driven Results", icon: Heart },
     { title: "Africa-Rooted Global Reach", icon: Globe }
   ];
+
+  const communityImpactImage = PlaceHolderImages.find(i => i.id === 'community-impact')?.imageUrl || "https://picsum.photos/seed/dibf-community/800/600";
+  const partnershipHandshakeImage = PlaceHolderImages.find(i => i.id === 'partnership-handshake')?.imageUrl || "https://picsum.photos/seed/partnership/800/600";
 
   return (
     <div className="space-y-0">
@@ -82,7 +85,7 @@ export default function Home() {
             <div className="relative">
               <div className="relative z-10 rounded-2xl overflow-hidden shadow-2xl">
                 <Image 
-                  src={PlaceHolderImages.find(i => i.id === 'community-impact')?.imageUrl || ""}
+                  src={communityImpactImage}
                   alt="DIBF Impact"
                   width={600}
                   height={400}
@@ -110,7 +113,7 @@ export default function Home() {
               <Card key={idx} className="overflow-hidden border-none shadow-lg group">
                 <div className="relative h-64 overflow-hidden">
                   <Image 
-                    src={item.img || ""} 
+                    src={item.img} 
                     alt={item.title} 
                     fill 
                     className="object-cover group-hover:scale-110 transition-transform duration-500"
@@ -181,7 +184,7 @@ export default function Home() {
             </div>
             <div className="hidden lg:block relative h-[400px]">
                <Image 
-                  src={PlaceHolderImages.find(i => i.id === 'partnership-handshake')?.imageUrl || ""}
+                  src={partnershipHandshakeImage}
                   alt="Global Partnerships"
                   fill
                   className="object-cover rounded-2xl shadow-2xl"

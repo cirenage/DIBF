@@ -6,13 +6,14 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export function Hero() {
   const heroImage = PlaceHolderImages.find(img => img.id === 'hero-medical');
+  const fallbackUrl = "https://picsum.photos/seed/dibf-hero/1200/800";
 
   return (
     <section className="relative min-h-[90vh] flex items-center overflow-hidden">
       {/* Background with Overlay */}
       <div className="absolute inset-0 z-0">
         <Image
-          src={heroImage?.imageUrl || "https://picsum.photos/seed/dibf-hero/1200/800"}
+          src={heroImage?.imageUrl || fallbackUrl}
           alt="DIBF Impact"
           fill
           className="object-cover"
