@@ -1,0 +1,41 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "hero-medical",
+      "description": "Healthcare workers collaborating in a community setting",
+      "imageUrl": "https://picsum.photos/seed/dibf-hero/1200/800",
+      "imageHint": "medical outreach"
+    },
+    {
+      "id": "community-impact",
+      "description": "Empowered community members in Africa",
+      "imageUrl": "https://picsum.photos/seed/dibf-community/800/600",
+      "imageHint": "community africa"
+    },
+    {
+      "id": "youth-empowerment",
+      "description": "Youth leadership training session",
+      "imageUrl": "https://picsum.photos/seed/dibf-youth/800/600",
+      "imageHint": "youth education"
+    },
+    {
+      "id": "initiative-tinewonsa",
+      "description": "The Tinewonsa Project impact",
+      "imageUrl": "https://picsum.photos/seed/tinewonsa/600/400",
+      "imageHint": "health clinic"
+    },
+    {
+      "id": "initiative-fieldschool",
+      "description": "Doctors in Business African Field School",
+      "imageUrl": "https://picsum.photos/seed/fieldschool/600/400",
+      "imageHint": "medical training"
+    },
+    {
+      "id": "partnership-handshake",
+      "description": "Global collaboration and partnership",
+      "imageUrl": "https://picsum.photos/seed/partnership/800/600",
+      "imageHint": "business partnership"
+    }
+  ]
+}
