@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from 'react';
@@ -100,7 +99,7 @@ export default function Home() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {trustFactors.map((factor, i) => (
                   <RevealItem key={i}>
-                    <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl hover:bg-white/10 transition-colors cursor-default">
+                    <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl hover:bg-white/10 transition-colors cursor-default border border-white/10">
                       <factor.icon className="w-8 h-8 text-primary" />
                       <span className="font-semibold">{factor.title}</span>
                     </div>
@@ -221,7 +220,7 @@ export default function Home() {
                 <Button asChild size="lg" variant="secondary" className="px-8 font-bold hover:translate-y-[-2px] transition-all">
                   <Link href="/partnerships">Become a Partner</Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className="px-8 border-white/30 text-white hover:bg-white hover:text-primary font-bold hover:translate-y-[-2px] transition-all">
+                <Button asChild size="lg" variant="outline" className="px-8 border-white/40 text-white hover:bg-white hover:text-primary font-bold hover:translate-y-[-2px] transition-all">
                   <Link href="/contact">Inquire Now</Link>
                 </Button>
               </div>
@@ -302,7 +301,7 @@ export default function Home() {
             <Button asChild size="lg" variant="default" className="px-10 h-14 text-lg font-bold shadow-lg hover:translate-y-[-2px] transition-all">
               <Link href="/give">Give Today</Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="px-10 h-14 text-lg font-bold border-white/30 text-white hover:bg-white hover:text-secondary hover:translate-y-[-2px] transition-all">
+            <Button asChild size="lg" variant="outline" className="px-10 h-14 text-lg font-bold border-white/40 text-white hover:bg-white hover:text-secondary hover:translate-y-[-2px] transition-all">
               <Link href="/contact">Contact Us</Link>
             </Button>
           </ScrollReveal>
