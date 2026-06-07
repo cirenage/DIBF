@@ -1,6 +1,7 @@
 
 "use client";
 
+import * as React from 'react';
 import { Hero } from '@/components/home/Hero';
 import { MissionVision } from '@/components/home/MissionVision';
 import { WhatWeDoGrid } from '@/components/home/WhatWeDoGrid';
@@ -10,35 +11,52 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, CheckCircle2, Heart, Users, Shield, Globe, Sprout } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Heart, Users, Shield, Globe, Sprout, Loader2 } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { ScrollReveal, RevealItem } from '@/components/shared/ScrollReveal';
-import { motion } from 'framer-motion';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
 export default function Home() {
-  const initiatives = [
+  const db = useFirestore();
+
+  // Fetch initiatives from Firestore
+  const initiativesRef = useMemoFirebase(() => {
+    if (!db) return null;
+    return collection(db, 'initiatives');
+  }, [db]);
+
+  const { data: firestoreInitiatives, loading: initiativesLoading } = useCollection(initiativesRef);
+
+  // Fallback static data in case collection is empty
+  const staticInitiatives = [
     {
       id: "tinewonsa",
       title: "The Tinewonsa Project",
-      desc: "Revolutionizing primary healthcare delivery in rural Africa through community-led clinical hubs.",
-      img: PlaceHolderImages.find(i => i.id === 'initiative-tinewonsa')?.imageUrl || "https://picsum.photos/seed/tinewonsa/600/400",
+      description: "Revolutionizing primary healthcare delivery in rural Africa through community-led clinical hubs.",
+      imageUrl: PlaceHolderImages.find(i => i.id === 'initiative-tinewonsa')?.imageUrl || "https://picsum.photos/seed/tinewonsa/600/400",
       category: "Healthcare Delivery"
     },
     {
       id: "dollar-a-day",
       title: "Dollar-A-Day Campaign",
-      desc: "Sustainable micro-philanthropy enabling continuous funding for essential medical supplies and child nutrition.",
-      img: PlaceHolderImages.find(i => i.id === 'initiative-fieldschool')?.imageUrl || "https://picsum.photos/seed/fieldschool/600/400",
+      description: "Sustainable micro-philanthropy enabling continuous funding for essential medical supplies and child nutrition.",
+      imageUrl: PlaceHolderImages.find(i => i.id === 'initiative-fieldschool')?.imageUrl || "https://picsum.photos/seed/fieldschool/600/400",
       category: "Sustainable Giving"
     },
     {
       id: "field-school",
       title: "African Field School",
-      desc: "Practical medical education for international students focusing on tropical medicine and public health.",
-      img: PlaceHolderImages.find(i => i.id === 'youth-empowerment')?.imageUrl || "https://picsum.photos/seed/field-school/600/400",
+      description: "Practical medical education for international students focusing on tropical medicine and public health.",
+      imageUrl: PlaceHolderImages.find(i => i.id === 'youth-empowerment')?.imageUrl || "https://picsum.photos/seed/field-school/600/400",
       category: "Education"
     }
   ];
+
+  // Merge or use dynamic data
+  const initiatives = firestoreInitiatives && firestoreInitiatives.length > 0 
+    ? firestoreInitiatives 
+    : staticInitiatives;
 
   const focusAreas = [
     "Health and Wellbeing", "Community Development", "Youth Leadership", "Mental Health Awareness", 
@@ -65,7 +83,6 @@ export default function Home() {
         <MissionVision />
       </ScrollReveal>
       
-      {/* Why DIBF */}
       <section className="py-24 bg-secondary text-white relative">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
@@ -112,7 +129,6 @@ export default function Home() {
         <WhatWeDoGrid />
       </ScrollReveal>
 
-      {/* Initiatives Preview */}
       <section className="py-24 bg-muted/30">
         <div className="container mx-auto px-4">
           <ScrollReveal>
@@ -121,39 +137,47 @@ export default function Home() {
               subtitle="Scaling impact through targeted, sustainable programs that transform communities from the inside out."
             />
           </ScrollReveal>
-          <ScrollReveal 
-            staggerChildren={0.2} 
-            className="grid grid-cols-1 md:grid-cols-3 gap-8"
-          >
-            {initiatives.map((item, idx) => (
-              <RevealItem key={idx}>
-                <Card className="overflow-hidden border-none shadow-lg group hover:shadow-2xl transition-all duration-500">
-                  <div className="relative h-64 overflow-hidden">
-                    <Image 
-                      src={item.img} 
-                      alt={item.title} 
-                      fill 
-                      className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                    />
-                    <div className="absolute top-4 left-4">
-                      <Badge className="bg-white/90 text-primary hover:bg-white">{item.category}</Badge>
+          
+          {initiativesLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <ScrollReveal 
+              staggerChildren={0.2} 
+              className="grid grid-cols-1 md:grid-cols-3 gap-8"
+            >
+              {initiatives.map((item, idx) => (
+                <RevealItem key={item.id || idx}>
+                  <Card className="overflow-hidden border-none shadow-lg group hover:shadow-2xl transition-all duration-500 h-full flex flex-col">
+                    <div className="relative h-64 overflow-hidden">
+                      <Image 
+                        src={item.imageUrl || "https://picsum.photos/seed/dibf/600/400"} 
+                        alt={item.title} 
+                        fill 
+                        className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                      />
+                      <div className="absolute top-4 left-4">
+                        <Badge className="bg-white/90 text-primary hover:bg-white">{item.category}</Badge>
+                      </div>
                     </div>
-                  </div>
-                  <CardContent className="p-6">
-                    <h3 className="text-xl font-bold font-headline mb-3 text-secondary">{item.title}</h3>
-                    <p className="text-muted-foreground text-sm line-clamp-3 leading-relaxed">
-                      {item.desc}
-                    </p>
-                  </CardContent>
-                  <CardFooter className="p-6 pt-0">
-                    <Button asChild variant="link" className="p-0 h-auto text-primary gap-2 group-hover:gap-3 transition-all">
-                      <Link href={`/initiatives#${item.id}`}>Learn more <ArrowRight className="w-4 h-4" /></Link>
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </RevealItem>
-            ))}
-          </ScrollReveal>
+                    <CardContent className="p-6 flex-1">
+                      <h3 className="text-xl font-bold font-headline mb-3 text-secondary">{item.title}</h3>
+                      <p className="text-muted-foreground text-sm line-clamp-3 leading-relaxed">
+                        {item.description}
+                      </p>
+                    </CardContent>
+                    <CardFooter className="p-6 pt-0">
+                      <Button asChild variant="link" className="p-0 h-auto text-primary gap-2 group-hover:gap-3 transition-all">
+                        <Link href={`/initiatives#${item.id}`}>Learn more <ArrowRight className="w-4 h-4" /></Link>
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </RevealItem>
+              ))}
+            </ScrollReveal>
+          )}
+
           <div className="text-center mt-12">
             <Button asChild size="lg" className="px-8 hover:translate-y-[-2px] transition-all">
               <Link href="/initiatives">View All Initiatives</Link>
@@ -162,7 +186,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Focus Areas Pill Grid */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
           <ScrollReveal>
@@ -184,7 +207,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Partnerships CTA */}
       <section className="py-24 bg-primary text-white overflow-hidden relative">
         <div className="absolute top-0 right-0 w-1/3 h-full bg-accent/20 skew-x-12 translate-x-1/2" />
         <div className="container mx-auto px-4 relative z-10">
@@ -216,7 +238,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Get Involved CTAs */}
       <section className="py-24 bg-background">
         <div className="container mx-auto px-4">
           <ScrollReveal>
@@ -267,7 +288,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Closing CTA */}
       <section className="py-24 bg-secondary text-white text-center relative overflow-hidden">
         <div className="absolute top-0 left-0 w-64 h-64 bg-primary/10 rounded-full -ml-32 -mt-32 blur-3xl" />
         <div className="container mx-auto px-4 max-w-3xl space-y-8 relative z-10">

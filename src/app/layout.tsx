@@ -1,7 +1,6 @@
 
 "use client";
 
-import type { Metadata } from 'next';
 import './globals.css';
 import { Navbar } from '@/components/shared/Navbar';
 import { Footer } from '@/components/shared/Footer';
@@ -9,6 +8,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { AIBotAssistant } from '@/components/ai/AIBotAssistant';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname } from 'next/navigation';
+import { FirebaseClientProvider } from '@/firebase';
 
 export default function RootLayout({
   children,
@@ -27,22 +27,24 @@ export default function RootLayout({
         <meta name="description" content="Advancing Health, Human Dignity, and Sustainable Development Across Africa and the Global Community." />
       </head>
       <body className="font-body antialiased selection:bg-primary/20">
-        <Navbar />
-        <AnimatePresence mode="wait">
-          <motion.main
-            key={pathname}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="min-h-screen"
-          >
-            {children}
-          </motion.main>
-        </AnimatePresence>
-        <Footer />
-        <AIBotAssistant />
-        <Toaster />
+        <FirebaseClientProvider>
+          <Navbar />
+          <AnimatePresence mode="wait">
+            <motion.main
+              key={pathname}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              className="min-h-screen"
+            >
+              {children}
+            </motion.main>
+          </AnimatePresence>
+          <Footer />
+          <AIBotAssistant />
+          <Toaster />
+        </FirebaseClientProvider>
       </body>
     </html>
   );
