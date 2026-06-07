@@ -3,7 +3,16 @@
 
 import * as React from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, addDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
+import { 
+  collection, 
+  addDoc, 
+  serverTimestamp, 
+  query, 
+  orderBy, 
+  getDocs, 
+  limit, 
+  Firestore 
+} from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -95,44 +104,104 @@ export default function AdminDashboard() {
     }
   };
 
+  /**
+   * Helper to perform a timeout-safe operation
+   */
+  async function withTimeout<T>(promise: Promise<T>, timeoutMs: number = 15000): Promise<T> {
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("TIMEOUT")), timeoutMs)
+    );
+    return Promise.race([promise, timeout]);
+  }
+
+  /**
+   * Check if a collection has any records
+   */
+  async function collectionHasData(firestore: Firestore, colName: string): Promise<boolean> {
+    const colRef = collection(firestore, colName);
+    const q = query(colRef, limit(1));
+    const snapshot = await getDocs(q);
+    return !snapshot.empty;
+  }
+
   const seedAllCollections = async () => {
     if (!db) return;
     setIsSeeding(true);
-    const collectionsToSeed = ['initiatives', 'news', 'impactStories', 'partners', 'donations'];
     
+    const collectionsToSeed = ['initiatives', 'news', 'impactStories', 'partners', 'donations'];
+    let seededCount = 0;
+    let skippedCount = 0;
+
     try {
-      for (const colName of collectionsToSeed) {
-        const ref = collection(db, colName);
-        const data = getSampleData(colName);
-        await addDoc(ref, data);
+      await withTimeout((async () => {
+        for (const colName of collectionsToSeed) {
+          // Idempotency check
+          const exists = await collectionHasData(db, colName);
+          if (exists) {
+            skippedCount++;
+            continue;
+          }
+
+          const ref = collection(db, colName);
+          const data = getSampleData(colName);
+          await addDoc(ref, data);
+          seededCount++;
+        }
+      })());
+
+      if (seededCount > 0) {
+        toast({ title: "Collections seeded successfully", description: `Added data to ${seededCount} collections. Skipped ${skippedCount} existing ones.` });
+      } else if (skippedCount > 0) {
+        toast({ title: "Collections already seeded", description: "All collections already contain data." });
       }
-      toast({ title: "Database Seeded", description: "Sample records added to all collections." });
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Seeding Failed", description: err.message || "Check your Security Rules." });
+      console.error(err);
+      if (err.message === "TIMEOUT") {
+        toast({ variant: "destructive", title: "Operation Timeout", description: "Seeding took too long. Please check the console or Firestore rules." });
+      } else if (err.code === 'permission-denied' || err.message?.includes('permissions')) {
+        toast({ variant: "destructive", title: "Permission Denied", description: "Firestore permission denied. Check Firebase rules." });
+      } else {
+        toast({ variant: "destructive", title: "Seeding Failed", description: err.message || "An unexpected error occurred." });
+      }
     } finally {
       setIsSeeding(false);
     }
   };
 
-  const addSampleData = () => {
+  const addSampleData = async () => {
     if (!db) return;
     setIsAdding(true);
 
     const ref = collection(db, activeTab);
     const data = getSampleData(activeTab);
 
-    addDoc(ref, data)
-      .then(() => {
-        toast({ title: "Success", description: `Added a sample to ${activeTab}` });
-      })
-      .catch(async (err) => {
+    try {
+      // Idempotency check for individual add
+      const exists = await collectionHasData(db, activeTab);
+      if (exists) {
+        toast({ title: "Collection already seeded", description: `The ${activeTab} collection already has records.` });
+        return;
+      }
+
+      await withTimeout(addDoc(ref, data));
+      toast({ title: "Success", description: `Added a sample to ${activeTab}` });
+    } catch (err: any) {
+      console.error(err);
+      if (err.message === "TIMEOUT") {
+        toast({ variant: "destructive", title: "Operation Timeout", description: "Request took too long to complete." });
+      } else if (err.code === 'permission-denied' || err.message?.includes('permissions')) {
+        toast({ variant: "destructive", title: "Permission Denied", description: "Firestore permission denied. Check Firebase rules." });
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: ref.path,
           operation: 'create',
           requestResourceData: data,
         }));
-      })
-      .finally(() => setIsAdding(false));
+      } else {
+        toast({ variant: "destructive", title: "Failed to Add Data", description: err.message || "An unexpected error occurred." });
+      }
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   return (
