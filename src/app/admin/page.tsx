@@ -3,12 +3,23 @@
 
 import * as React from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Database, Plus, Loader2, RefreshCcw, AlertCircle } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Database, 
+  Plus, 
+  Loader2, 
+  RefreshCcw, 
+  AlertCircle, 
+  FileText, 
+  Heart, 
+  LayoutGrid,
+  ExternalLink
+} from 'lucide-react';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { useToast } from '@/hooks/use-toast';
@@ -16,48 +27,84 @@ import { useToast } from '@/hooks/use-toast';
 export default function AdminDashboard() {
   const db = useFirestore();
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = React.useState('initiatives');
   const [isAdding, setIsAdding] = React.useState(false);
 
+  // Initiatives Query
   const initiativesRef = useMemoFirebase(() => {
     if (!db) return null;
     return collection(db, 'initiatives');
   }, [db]);
+  const { data: initiatives, loading: loadingInitiatives } = useCollection(initiativesRef);
 
-  const { data: initiatives, loading, error } = useCollection(initiativesRef);
+  // News Query
+  const newsRef = useMemoFirebase(() => {
+    if (!db) return null;
+    return collection(db, 'news');
+  }, [db]);
+  const { data: news, loading: loadingNews } = useCollection(newsRef ? query(newsRef, orderBy('date', 'desc')) : null);
 
-  const addTestData = async () => {
-    if (!initiativesRef) return;
+  // Impact Stories Query
+  const storiesRef = useMemoFirebase(() => {
+    if (!db) return null;
+    return collection(db, 'impact-stories');
+  }, [db]);
+  const { data: stories, loading: loadingStories } = useCollection(storiesRef);
+
+  const addSampleData = async () => {
+    if (!db) return;
     setIsAdding(true);
 
-    const newInitiative = {
-      title: "New Community Outreach " + (initiatives.length + 1),
-      description: "A dynamically added initiative to demonstrate Firestore connectivity.",
-      category: "Healthcare",
-      imageUrl: "https://picsum.photos/seed/" + Math.random() + "/600/400",
-      active: true,
-      createdAt: serverTimestamp(),
-    };
+    try {
+      if (activeTab === 'initiatives') {
+        const ref = collection(db, 'initiatives');
+        const data = {
+          title: "Community Health Hub " + (initiatives.length + 1),
+          description: "New clinical site providing essential maternal care.",
+          category: "Healthcare",
+          imageUrl: "https://picsum.photos/seed/" + Math.random() + "/600/400",
+          active: true,
+          createdAt: serverTimestamp(),
+        };
+        await addDoc(ref, data);
+      } else if (activeTab === 'news') {
+        const ref = collection(db, 'news');
+        const data = {
+          title: "Quarterly Impact Report Released",
+          content: "We are proud to share our progress for Q3 2024...",
+          date: new Date().toISOString().split('T')[0],
+          author: "DIBF Communications",
+          imageUrl: "https://picsum.photos/seed/news-" + Math.random() + "/600/400",
+        };
+        await addDoc(ref, data);
+      } else if (activeTab === 'stories') {
+        const ref = collection(db, 'impact-stories');
+        const data = {
+          name: "Amara K.",
+          story: "The scholarship from DIBF changed my trajectory...",
+          location: "Accra, Ghana",
+          imageUrl: "https://picsum.photos/seed/story-" + Math.random() + "/600/400",
+        };
+        await addDoc(ref, data);
+      }
 
-    addDoc(initiativesRef, newInitiative)
-      .then(() => {
-        toast({
-          title: "Success",
-          description: "Initiative added to Firestore!",
-        });
-      })
-      .catch(async (err) => {
-        const permsError = new FirestorePermissionError({
-          path: initiativesRef.path,
-          operation: 'create',
-          requestResourceData: newInitiative,
-        });
-        errorEmitter.emit('permission-error', permsError);
-      })
-      .finally(() => setIsAdding(false));
+      toast({
+        title: "Success",
+        description: `New ${activeTab} document added successfully.`,
+      });
+    } catch (err: any) {
+      const permsError = new FirestorePermissionError({
+        path: activeTab,
+        operation: 'create',
+      });
+      errorEmitter.emit('permission-error', permsError);
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   return (
-    <div className="container mx-auto py-12 px-4">
+    <div className="container mx-auto py-12 px-4 max-w-6xl">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-headline font-bold text-secondary flex items-center gap-3">
@@ -65,83 +112,150 @@ export default function AdminDashboard() {
             Foundation Data Explorer
           </h1>
           <p className="text-muted-foreground mt-1">
-            Manage your dynamic content stored in Firebase Firestore.
+            Real-time management of your DIBF dynamic content.
           </p>
         </div>
-        <Button onClick={addTestData} disabled={isAdding || !db} className="gap-2">
-          {isAdding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-          Add Sample Initiative
-        </Button>
+        <div className="flex gap-3">
+          <Button variant="outline" asChild className="gap-2">
+            <a href="https://console.firebase.google.com/" target="_blank" rel="noreferrer">
+              <ExternalLink className="w-4 h-4" />
+              Firebase Console
+            </a>
+          </Button>
+          <Button onClick={addSampleData} disabled={isAdding || !db} className="gap-2">
+            {isAdding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+            Add Sample {activeTab.slice(0, -1)}
+          </Button>
+        </div>
       </div>
 
       {!db && (
-        <Card className="border-amber-200 bg-amber-50 mb-8">
-          <CardContent className="pt-6 flex items-center gap-3 text-amber-800">
-            <AlertCircle className="w-5 h-5" />
-            <p className="text-sm">
-              Firebase credentials are not configured. Check your <strong>.env</strong> file and ensure 
-              <strong>NEXT_PUBLIC_FIREBASE_API_KEY</strong> is set.
-            </p>
+        <Card className="border-amber-200 bg-amber-50 mb-8 border-l-4">
+          <CardContent className="pt-6 flex items-start gap-3 text-amber-800">
+            <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
+            <div className="space-y-1">
+              <p className="font-bold">Firebase connection not established</p>
+              <p className="text-sm">
+                To see your data, please ensure you have added your Firebase credentials to the 
+                <code className="bg-amber-100 px-1.5 py-0.5 rounded mx-1">.env</code> 
+                file. You can find these in your Firebase Project Settings.
+              </p>
+            </div>
           </CardContent>
         </Card>
       )}
 
-      <Card className="shadow-xl border-none">
-        <CardHeader>
-          <CardTitle>Initiatives Collection</CardTitle>
-          <CardDescription>
-            Documents found in the <code className="bg-muted px-1 rounded">/initiatives</code> path.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <RefreshCcw className="w-8 h-8 animate-spin text-primary opacity-20" />
-            </div>
-          ) : initiatives.length === 0 ? (
-            <div className="text-center py-12 border-2 border-dashed rounded-xl">
-              <p className="text-muted-foreground">No documents found in this collection.</p>
-              <Button variant="link" onClick={addTestData} className="mt-2">Create your first entry</Button>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>ID</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {initiatives.map((item: any) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium">{item.title}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{item.category}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        {item.active ? (
-                          <span className="text-xs text-green-600 font-bold flex items-center gap-1">
-                            <span className="w-2 h-2 bg-green-600 rounded-full animate-pulse" />
-                            Active
-                          </span>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">Inactive</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="font-mono text-[10px] text-muted-foreground">
-                        {item.id}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="initiatives" onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="bg-muted p-1 rounded-xl">
+          <TabsTrigger value="initiatives" className="gap-2 px-6">
+            <LayoutGrid className="w-4 h-4" />
+            Initiatives
+          </TabsTrigger>
+          <TabsTrigger value="news" className="gap-2 px-6">
+            <FileText className="w-4 h-4" />
+            News & Updates
+          </TabsTrigger>
+          <TabsTrigger value="stories" className="gap-2 px-6">
+            <Heart className="w-4 h-4" />
+            Impact Stories
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="initiatives">
+          <CollectionTable 
+            title="Initiatives" 
+            description="Flagship programs and projects"
+            data={initiatives} 
+            loading={loadingInitiatives}
+            columns={['Title', 'Category', 'Status', 'ID']}
+            renderRow={(item) => (
+              <TableRow key={item.id}>
+                <TableCell className="font-medium">{item.title}</TableCell>
+                <TableCell><Badge variant="outline">{item.category}</Badge></TableCell>
+                <TableCell>
+                  {item.active ? (
+                    <span className="text-xs text-green-600 font-bold flex items-center gap-1">
+                      <span className="w-2 h-2 bg-green-600 rounded-full animate-pulse" /> Active
+                    </span>
+                  ) : "Inactive"}
+                </TableCell>
+                <TableCell className="font-mono text-[10px] text-muted-foreground">{item.id}</TableCell>
+              </TableRow>
+            )}
+          />
+        </TabsContent>
+
+        <TabsContent value="news">
+          <CollectionTable 
+            title="News & Insights" 
+            description="Foundation blog posts and reports"
+            data={news} 
+            loading={loadingNews}
+            columns={['Date', 'Title', 'Author', 'ID']}
+            renderRow={(item) => (
+              <TableRow key={item.id}>
+                <TableCell className="text-xs whitespace-nowrap">{item.date}</TableCell>
+                <TableCell className="font-medium">{item.title}</TableCell>
+                <TableCell className="text-muted-foreground">{item.author}</TableCell>
+                <TableCell className="font-mono text-[10px] text-muted-foreground">{item.id}</TableCell>
+              </TableRow>
+            )}
+          />
+        </TabsContent>
+
+        <TabsContent value="stories">
+          <CollectionTable 
+            title="Impact Stories" 
+            description="Community testimonials and narratives"
+            data={stories} 
+            loading={loadingStories}
+            columns={['Name', 'Location', 'Story Preview', 'ID']}
+            renderRow={(item) => (
+              <TableRow key={item.id}>
+                <TableCell className="font-bold">{item.name}</TableCell>
+                <TableCell>{item.location}</TableCell>
+                <TableCell className="max-w-xs truncate italic text-muted-foreground">"{item.story}"</TableCell>
+                <TableCell className="font-mono text-[10px] text-muted-foreground">{item.id}</TableCell>
+              </TableRow>
+            )}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
+  );
+}
+
+function CollectionTable({ title, description, data, loading, columns, renderRow }: any) {
+  return (
+    <Card className="shadow-xl border-none">
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <RefreshCcw className="w-10 h-10 animate-spin text-primary opacity-20" />
+          </div>
+        ) : !data || data.length === 0 ? (
+          <div className="text-center py-20 border-2 border-dashed rounded-2xl bg-muted/20">
+            <p className="text-muted-foreground">No records found in this collection.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  {columns.map((col: string) => <TableHead key={col}>{col}</TableHead>)}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.map(renderRow)}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
