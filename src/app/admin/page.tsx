@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from 'react';
@@ -18,7 +17,8 @@ import {
   FileText, 
   Heart, 
   LayoutGrid,
-  ExternalLink
+  ExternalLink,
+  Trash2
 } from 'lucide-react';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -51,56 +51,58 @@ export default function AdminDashboard() {
   }, [db]);
   const { data: stories, loading: loadingStories } = useCollection(storiesRef);
 
-  const addSampleData = async () => {
+  const addSampleData = () => {
     if (!db) return;
     setIsAdding(true);
 
-    try {
-      if (activeTab === 'initiatives') {
-        const ref = collection(db, 'initiatives');
-        const data = {
-          title: "Community Health Hub " + (initiatives.length + 1),
-          description: "New clinical site providing essential maternal care.",
-          category: "Healthcare",
-          imageUrl: "https://picsum.photos/seed/" + Math.random() + "/600/400",
-          active: true,
-          createdAt: serverTimestamp(),
-        };
-        await addDoc(ref, data);
-      } else if (activeTab === 'news') {
-        const ref = collection(db, 'news');
-        const data = {
-          title: "Quarterly Impact Report Released",
-          content: "We are proud to share our progress for Q3 2024...",
-          date: new Date().toISOString().split('T')[0],
-          author: "DIBF Communications",
-          imageUrl: "https://picsum.photos/seed/news-" + Math.random() + "/600/400",
-        };
-        await addDoc(ref, data);
-      } else if (activeTab === 'stories') {
-        const ref = collection(db, 'impact-stories');
-        const data = {
-          name: "Amara K.",
-          story: "The scholarship from DIBF changed my trajectory...",
-          location: "Accra, Ghana",
-          imageUrl: "https://picsum.photos/seed/story-" + Math.random() + "/600/400",
-        };
-        await addDoc(ref, data);
-      }
-
-      toast({
-        title: "Success",
-        description: `New ${activeTab} document added successfully.`,
-      });
-    } catch (err: any) {
-      const permsError = new FirestorePermissionError({
-        path: activeTab,
-        operation: 'create',
-      });
-      errorEmitter.emit('permission-error', permsError);
-    } finally {
-      setIsAdding(false);
+    const path = activeTab === 'stories' ? 'impact-stories' : activeTab;
+    const ref = collection(db, path);
+    
+    let data = {};
+    if (activeTab === 'initiatives') {
+      data = {
+        title: "Community Health Hub " + (initiatives.length + 1),
+        description: "New clinical site providing essential maternal care and primary health services.",
+        category: "Healthcare",
+        imageUrl: `https://picsum.photos/seed/${Math.random()}/600/400`,
+        active: true,
+        createdAt: serverTimestamp(),
+      };
+    } else if (activeTab === 'news') {
+      data = {
+        title: "Quarterly Impact Report Released",
+        content: "We are proud to share our progress for the current quarter, highlighting significant gains in maternal health and youth programs.",
+        date: new Date().toISOString().split('T')[0],
+        author: "DIBF Communications",
+        imageUrl: `https://picsum.photos/seed/news-${Math.random()}/600/400`,
+      };
+    } else if (activeTab === 'stories') {
+      data = {
+        name: "Community Member " + (stories.length + 1),
+        story: "The scholarship and medical support from DIBF changed my trajectory and gave me hope for a better future.",
+        location: "Accra, Ghana",
+        imageUrl: `https://picsum.photos/seed/story-${Math.random()}/600/400`,
+      };
     }
+
+    addDoc(ref, data)
+      .then(() => {
+        toast({
+          title: "Success",
+          description: `New ${activeTab} document added successfully.`,
+        });
+      })
+      .catch(async (err) => {
+        const permsError = new FirestorePermissionError({
+          path: ref.path,
+          operation: 'create',
+          requestResourceData: data,
+        });
+        errorEmitter.emit('permission-error', permsError);
+      })
+      .finally(() => {
+        setIsAdding(false);
+      });
   };
 
   return (
@@ -122,9 +124,9 @@ export default function AdminDashboard() {
               Firebase Console
             </a>
           </Button>
-          <Button onClick={addSampleData} disabled={isAdding || !db} className="gap-2">
+          <Button onClick={addSampleData} disabled={isAdding || !db} className="gap-2 bg-primary hover:bg-primary/90">
             {isAdding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-            Add Sample {activeTab.slice(0, -1)}
+            Add Sample {activeTab === 'stories' ? 'Story' : activeTab.slice(0, -1)}
           </Button>
         </div>
       </div>
@@ -138,7 +140,7 @@ export default function AdminDashboard() {
               <p className="text-sm">
                 To see your data, please ensure you have added your Firebase credentials to the 
                 <code className="bg-amber-100 px-1.5 py-0.5 rounded mx-1">.env</code> 
-                file. You can find these in your Firebase Project Settings.
+                file. You can find these in your Firebase Project Settings under "General".
               </p>
             </div>
           </CardContent>
@@ -168,7 +170,7 @@ export default function AdminDashboard() {
             data={initiatives} 
             loading={loadingInitiatives}
             columns={['Title', 'Category', 'Status', 'ID']}
-            renderRow={(item) => (
+            renderRow={(item: any) => (
               <TableRow key={item.id}>
                 <TableCell className="font-medium">{item.title}</TableCell>
                 <TableCell><Badge variant="outline">{item.category}</Badge></TableCell>
@@ -192,7 +194,7 @@ export default function AdminDashboard() {
             data={news} 
             loading={loadingNews}
             columns={['Date', 'Title', 'Author', 'ID']}
-            renderRow={(item) => (
+            renderRow={(item: any) => (
               <TableRow key={item.id}>
                 <TableCell className="text-xs whitespace-nowrap">{item.date}</TableCell>
                 <TableCell className="font-medium">{item.title}</TableCell>
@@ -210,7 +212,7 @@ export default function AdminDashboard() {
             data={stories} 
             loading={loadingStories}
             columns={['Name', 'Location', 'Story Preview', 'ID']}
-            renderRow={(item) => (
+            renderRow={(item: any) => (
               <TableRow key={item.id}>
                 <TableCell className="font-bold">{item.name}</TableCell>
                 <TableCell>{item.location}</TableCell>
@@ -240,6 +242,7 @@ function CollectionTable({ title, description, data, loading, columns, renderRow
         ) : !data || data.length === 0 ? (
           <div className="text-center py-20 border-2 border-dashed rounded-2xl bg-muted/20">
             <p className="text-muted-foreground">No records found in this collection.</p>
+            <p className="text-xs text-muted-foreground/60 mt-2">Add a sample to get started.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">

@@ -15,4 +15,11 @@ export const firebaseConfig = {
 /**
  * Validates that the core Firebase configuration is present.
  */
-export const isFirebaseConfigValid = !!firebaseConfig.apiKey && !!firebaseConfig.projectId;
+export const isFirebaseConfigValid = 
+  !!firebaseConfig.apiKey && 
+  firebaseConfig.apiKey !== 'YOUR_API_KEY' &&
+  !!firebaseConfig.projectId;
+
+if (process.env.NODE_ENV === 'development' && !isFirebaseConfigValid) {
+  console.warn("Firebase configuration is missing or invalid. Check your .env file.");
+}
