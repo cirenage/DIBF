@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from 'react';
-import { MessageSquare, Send, X, Bot, User } from 'lucide-react';
+import { MessageSquare, Send, X, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,15 @@ export function AIBotAssistant() {
     { role: 'bot', text: 'Hello! I am the DIBF Assistant. How can I help you today with information about our initiatives, mission, or ways to get involved?' }
   ]);
   const [isLoading, setIsLoading] = React.useState(false);
+  
+  const scrollAnchorRef = React.useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when messages change
+  React.useEffect(() => {
+    if (scrollAnchorRef.current) {
+      scrollAnchorRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isLoading]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -44,7 +53,7 @@ export function AIBotAssistant() {
     <div className="fixed bottom-6 right-6 z-[100] font-body">
       {isOpen ? (
         <Card className="w-[350px] sm:w-[400px] h-[500px] shadow-2xl flex flex-col border-primary/20 animate-in slide-in-from-bottom-4 duration-300">
-          <CardHeader className="bg-primary text-white p-4 flex flex-row items-center justify-between rounded-t-lg">
+          <CardHeader className="bg-primary text-white p-4 flex flex-row items-center justify-between rounded-t-lg shrink-0">
             <div className="flex items-center gap-2">
               <Bot className="w-5 h-5" />
               <CardTitle className="text-sm font-headline">DIBF AI Assistant</CardTitle>
@@ -54,14 +63,14 @@ export function AIBotAssistant() {
             </Button>
           </CardHeader>
           
-          <ScrollArea className="flex-1 p-4">
-            <div className="space-y-4">
+          <ScrollArea className="flex-1">
+            <div className="p-4 space-y-4">
               {messages.map((msg, idx) => (
                 <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[85%] p-3 rounded-2xl text-sm ${
                     msg.role === 'user' 
-                    ? 'bg-primary text-white rounded-tr-none' 
-                    : 'bg-muted text-secondary rounded-tl-none border border-border'
+                    ? 'bg-primary text-white rounded-tr-none shadow-sm' 
+                    : 'bg-muted text-secondary rounded-tl-none border border-border shadow-sm'
                   }`}>
                     {msg.text}
                   </div>
@@ -69,15 +78,18 @@ export function AIBotAssistant() {
               ))}
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-muted p-3 rounded-2xl rounded-tl-none animate-pulse text-xs">
-                    Thinking...
+                  <div className="bg-muted p-3 rounded-2xl rounded-tl-none animate-pulse text-xs flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                    <span className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                    <span className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce"></span>
                   </div>
                 </div>
               )}
+              <div ref={scrollAnchorRef} className="h-2" />
             </div>
           </ScrollArea>
 
-          <CardFooter className="p-4 border-t">
+          <CardFooter className="p-4 border-t bg-background shrink-0">
             <form 
               onSubmit={(e) => { e.preventDefault(); handleSend(); }}
               className="flex w-full gap-2"
@@ -89,7 +101,7 @@ export function AIBotAssistant() {
                 className="flex-1"
                 disabled={isLoading}
               />
-              <Button type="submit" size="icon" disabled={isLoading}>
+              <Button type="submit" size="icon" disabled={isLoading} className="shrink-0">
                 <Send className="w-4 h-4" />
               </Button>
             </form>
