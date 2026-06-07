@@ -8,6 +8,7 @@ import { Menu, X, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const NAV_LINKS = [
   { href: '/', label: 'Home' },
@@ -35,16 +36,21 @@ export function Navbar() {
 
   return (
     <header className={cn(
-      'sticky top-0 z-50 w-full transition-all duration-300',
-      isScrolled ? 'bg-white/95 backdrop-blur-md shadow-sm border-b py-2' : 'bg-transparent py-4'
+      'sticky top-0 z-50 w-full transition-all duration-500 ease-in-out',
+      isScrolled 
+        ? 'bg-white/95 backdrop-blur-md shadow-sm border-b py-2' 
+        : 'bg-transparent py-4'
     )}>
       <div className="container mx-auto px-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 group">
-          <div className="bg-primary p-2 rounded-lg text-white font-bold text-xl group-hover:scale-105 transition-transform">
+          <div className="bg-primary p-2 rounded-lg text-white font-bold text-xl group-hover:scale-105 transition-transform duration-300">
             DIBF
           </div>
           <div className="hidden sm:flex flex-col leading-tight">
-            <span className={cn("font-headline font-bold text-lg", isScrolled ? "text-secondary" : "text-secondary")}>
+            <span className={cn(
+              "font-headline font-bold text-lg transition-colors duration-300",
+              isScrolled ? "text-secondary" : "text-secondary"
+            )}>
               Doctors in Business
             </span>
             <span className="text-xs text-muted-foreground uppercase tracking-wider">Foundation</span>
@@ -53,24 +59,41 @@ export function Navbar() {
 
         {/* Desktop Nav */}
         <nav className="hidden lg:flex items-center gap-6">
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-primary",
-                pathname === link.href ? "text-primary font-bold" : "text-secondary/80"
-              )}
-            >
-              {link.label}
-            </Link>
-          ))}
-          <Button asChild variant="default" className="ml-4 gap-2 px-6">
-            <Link href="/give">
-              <Heart className="w-4 h-4 fill-current" />
-              Give
-            </Link>
-          </Button>
+          {NAV_LINKS.map((link) => {
+            const isActive = pathname === link.href;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "text-sm font-medium transition-all relative py-1",
+                  isActive ? "text-primary font-bold" : "text-secondary/80 hover:text-primary"
+                )}
+              >
+                {link.label}
+                {isActive && (
+                  <motion.div
+                    layoutId="activeNav"
+                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                  />
+                )}
+              </Link>
+            );
+          })}
+          <motion.div
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Button asChild variant="default" className="ml-4 gap-2 px-6 shadow-md hover:shadow-lg transition-all duration-300">
+              <Link href="/give">
+                <Heart className="w-4 h-4 fill-current" />
+                Give
+              </Link>
+            </Button>
+          </motion.div>
         </nav>
 
         {/* Mobile Nav */}
