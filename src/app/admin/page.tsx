@@ -34,20 +34,24 @@ export default function AdminDashboard() {
   const [isAdding, setIsAdding] = React.useState(false);
   const [isSeeding, setIsSeeding] = React.useState(false);
 
-  // Queries
+  // Memoized Base Collection References
   const initiativesRef = useMemoFirebase(() => db ? collection(db, 'initiatives') : null, [db]);
-  const { data: initiatives, loading: loadingInitiatives } = useCollection(initiativesRef);
-
   const newsRef = useMemoFirebase(() => db ? collection(db, 'news') : null, [db]);
-  const { data: news, loading: loadingNews } = useCollection(newsRef ? query(newsRef, orderBy('date', 'desc')) : null);
-
   const storiesRef = useMemoFirebase(() => db ? collection(db, 'impactStories') : null, [db]);
-  const { data: stories, loading: loadingStories } = useCollection(storiesRef);
-
   const partnersRef = useMemoFirebase(() => db ? collection(db, 'partners') : null, [db]);
-  const { data: partners, loading: loadingPartners } = useCollection(partnersRef);
-
   const donationsRef = useMemoFirebase(() => db ? collection(db, 'donations') : null, [db]);
+
+  // Memoized Queries to prevent infinite render loops
+  const newsQuery = useMemoFirebase(() => {
+    if (!newsRef) return null;
+    return query(newsRef, orderBy('date', 'desc'));
+  }, [newsRef]);
+
+  // Data Subscriptions
+  const { data: initiatives, loading: loadingInitiatives } = useCollection(initiativesRef);
+  const { data: news, loading: loadingNews } = useCollection(newsQuery);
+  const { data: stories, loading: loadingStories } = useCollection(storiesRef);
+  const { data: partners, loading: loadingPartners } = useCollection(partnersRef);
   const { data: donations, loading: loadingDonations } = useCollection(donationsRef);
 
   const getSampleData = (type: string) => {
