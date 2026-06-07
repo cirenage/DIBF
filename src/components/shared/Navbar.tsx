@@ -4,7 +4,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, Heart } from 'lucide-react';
+import { Menu, X, Heart, Database } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -13,13 +13,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 const NAV_LINKS = [
   { href: '/', label: 'Home' },
   { href: '/about', label: 'About DIBF' },
-  { href: '/what-we-do', label: 'What We Do' },
-  { href: '/initiatives', label: 'Our Initiatives' },
-  { href: '/impact', label: 'Impact' },
+  { href: '/initiatives', label: 'Initiatives' },
   { href: '/partnerships', label: 'Partnerships' },
-  { href: '/get-involved', label: 'Get Involved' },
-  { href: '/news', label: 'News' },
   { href: '/contact', label: 'Contact' },
+  { href: '/admin', label: 'Database', icon: Database },
 ];
 
 export function Navbar() {
@@ -66,10 +63,11 @@ export function Navbar() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "text-sm font-medium transition-all relative py-1",
+                  "text-sm font-medium transition-all relative py-1 flex items-center gap-1.5",
                   isActive ? "text-primary font-bold" : "text-secondary/80 hover:text-primary"
                 )}
               >
+                {link.icon && <link.icon className="w-3.5 h-3.5" />}
                 {link.label}
                 {isActive && (
                   <motion.div
@@ -121,10 +119,11 @@ export function Navbar() {
                     key={link.href}
                     href={link.href}
                     className={cn(
-                      "text-lg font-medium py-2 border-b border-muted transition-colors hover:text-primary",
+                      "text-lg font-medium py-2 border-b border-muted transition-colors hover:text-primary flex items-center gap-2",
                       pathname === link.href ? "text-primary" : "text-secondary/80"
                     )}
                   >
+                    {link.icon && <link.icon className="w-5 h-5" />}
                     {link.label}
                   </Link>
                 ))}
