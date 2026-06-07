@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from 'react';
@@ -30,11 +29,14 @@ import {
   Users,
   Handshake,
   DollarSign,
-  Sparkles
+  Sparkles,
+  ShieldAlert,
+  Info
 } from 'lucide-react';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function AdminDashboard() {
   const db = useFirestore();
@@ -57,11 +59,11 @@ export default function AdminDashboard() {
   }, [newsRef]);
 
   // Data Subscriptions
-  const { data: initiatives, loading: loadingInitiatives } = useCollection(initiativesRef);
-  const { data: news, loading: loadingNews } = useCollection(newsQuery);
-  const { data: stories, loading: loadingStories } = useCollection(storiesRef);
-  const { data: partners, loading: loadingPartners } = useCollection(partnersRef);
-  const { data: donations, loading: loadingDonations } = useCollection(donationsRef);
+  const { data: initiatives, loading: loadingInitiatives, error: errorInitiatives } = useCollection(initiativesRef);
+  const { data: news, loading: loadingNews, error: errorNews } = useCollection(newsQuery);
+  const { data: stories, loading: loadingStories, error: errorStories } = useCollection(storiesRef);
+  const { data: partners, loading: loadingPartners, error: errorPartners } = useCollection(partnersRef);
+  const { data: donations, loading: loadingDonations, error: errorDonations } = useCollection(donationsRef);
 
   const getSampleData = (type: string) => {
     switch(type) {
@@ -107,62 +109,83 @@ export default function AdminDashboard() {
   /**
    * Helper to perform a timeout-safe operation
    */
-  async function withTimeout<T>(promise: Promise<T>, timeoutMs: number = 15000): Promise<T> {
-    const timeout = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("TIMEOUT")), timeoutMs)
-    );
-    return Promise.race([promise, timeout]);
+  async function withTimeout<T>(promise: Promise<T>, timeoutMs: number = 10000): Promise<T> {
+    let timeoutHandle: any;
+    const timeout = new Promise<never>((_, reject) => {
+      timeoutHandle = setTimeout(() => reject(new Error("TIMEOUT")), timeoutMs);
+    });
+    
+    try {
+      return await Promise.race([promise, timeout]);
+    } finally {
+      clearTimeout(timeoutHandle);
+    }
   }
 
   /**
    * Check if a collection has any records
    */
   async function collectionHasData(firestore: Firestore, colName: string): Promise<boolean> {
-    const colRef = collection(firestore, colName);
-    const q = query(colRef, limit(1));
-    const snapshot = await getDocs(q);
-    return !snapshot.empty;
+    try {
+      const colRef = collection(firestore, colName);
+      const q = query(colRef, limit(1));
+      const snapshot = await getDocs(q);
+      return !snapshot.empty;
+    } catch (err: any) {
+      // Re-throw permission errors specifically
+      if (err.code === 'permission-denied') throw err;
+      return false;
+    }
   }
 
   const seedAllCollections = async () => {
     if (!db) return;
     setIsSeeding(true);
     
-    const collectionsToSeed = ['initiatives', 'news', 'impactStories', 'partners', 'donations'];
-    let seededCount = 0;
-    let skippedCount = 0;
+    // Seed CMS collections only. Donations are restricted.
+    const collectionsToSeed = ['initiatives', 'news', 'impactStories', 'partners'];
+    const results = { seeded: [] as string[], skipped: [] as string[], failed: [] as string[] };
 
     try {
-      await withTimeout((async () => {
-        for (const colName of collectionsToSeed) {
-          // Idempotency check
-          const exists = await collectionHasData(db, colName);
+      for (const colName of collectionsToSeed) {
+        try {
+          const exists = await withTimeout(collectionHasData(db, colName));
           if (exists) {
-            skippedCount++;
+            results.skipped.push(colName);
             continue;
           }
 
           const ref = collection(db, colName);
           const data = getSampleData(colName);
           await addDoc(ref, data);
-          seededCount++;
+          results.seeded.push(colName);
+        } catch (err: any) {
+          console.error(`Failed to seed ${colName}:`, err);
+          if (err.code === 'permission-denied') {
+            results.failed.push(`${colName} (Permission Denied)`);
+          } else if (err.message === 'TIMEOUT') {
+            results.failed.push(`${colName} (Timeout)`);
+          } else {
+            results.failed.push(colName);
+          }
         }
-      })());
+      }
 
-      if (seededCount > 0) {
-        toast({ title: "Collections seeded successfully", description: `Added data to ${seededCount} collections. Skipped ${skippedCount} existing ones.` });
-      } else if (skippedCount > 0) {
-        toast({ title: "Collections already seeded", description: "All collections already contain data." });
-      }
-    } catch (err: any) {
-      console.error(err);
-      if (err.message === "TIMEOUT") {
-        toast({ variant: "destructive", title: "Operation Timeout", description: "Seeding took too long. Please check the console or Firestore rules." });
-      } else if (err.code === 'permission-denied' || err.message?.includes('permissions')) {
-        toast({ variant: "destructive", title: "Permission Denied", description: "Firestore permission denied. Check Firebase rules." });
+      if (results.seeded.length > 0) {
+        toast({ 
+          title: "Seeding complete", 
+          description: `Seeded: ${results.seeded.join(', ')}. Skipped: ${results.skipped.length}. Failed: ${results.failed.length}.` 
+        });
+      } else if (results.failed.length > 0) {
+        toast({ 
+          variant: "destructive",
+          title: "Seeding issues", 
+          description: `Failed: ${results.failed.join(', ')}.` 
+        });
       } else {
-        toast({ variant: "destructive", title: "Seeding Failed", description: err.message || "An unexpected error occurred." });
+        toast({ title: "Already up to date", description: "No new collections needed seeding." });
       }
+
     } finally {
       setIsSeeding(false);
     }
@@ -170,34 +193,50 @@ export default function AdminDashboard() {
 
   const addSampleData = async () => {
     if (!db) return;
-    setIsAdding(true);
+    
+    if (activeTab === 'donations') {
+      toast({ 
+        variant: "destructive", 
+        title: "Restricted Access", 
+        description: "Donations are restricted for security and cannot be seeded from the admin client." 
+      });
+      return;
+    }
 
+    setIsAdding(true);
     const ref = collection(db, activeTab);
     const data = getSampleData(activeTab);
 
     try {
-      // Idempotency check for individual add
-      const exists = await collectionHasData(db, activeTab);
+      const exists = await withTimeout(collectionHasData(db, activeTab));
       if (exists) {
-        toast({ title: "Collection already seeded", description: `The ${activeTab} collection already has records.` });
+        toast({ title: "Seeded already", description: `The ${activeTab} collection already has data.` });
+        setIsAdding(false);
         return;
       }
 
       await withTimeout(addDoc(ref, data));
-      toast({ title: "Success", description: `Added a sample to ${activeTab}` });
+      toast({ title: "Success", description: `Added sample to ${activeTab}` });
     } catch (err: any) {
       console.error(err);
-      if (err.message === "TIMEOUT") {
-        toast({ variant: "destructive", title: "Operation Timeout", description: "Request took too long to complete." });
-      } else if (err.code === 'permission-denied' || err.message?.includes('permissions')) {
-        toast({ variant: "destructive", title: "Permission Denied", description: "Firestore permission denied. Check Firebase rules." });
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: ref.path,
-          operation: 'create',
-          requestResourceData: data,
-        }));
+      if (err.code === 'permission-denied') {
+        toast({ 
+          variant: "destructive", 
+          title: "Permission Denied", 
+          description: `Firestore permission denied for ${activeTab}. Check your security rules.` 
+        });
+      } else if (err.message === "TIMEOUT") {
+        toast({ 
+          variant: "destructive", 
+          title: "Request Timeout", 
+          description: "Operation took too long. Check your network or Firebase configuration." 
+        });
       } else {
-        toast({ variant: "destructive", title: "Failed to Add Data", description: err.message || "An unexpected error occurred." });
+        toast({ 
+          variant: "destructive", 
+          title: "Operation Failed", 
+          description: err.message || "An unexpected error occurred." 
+        });
       }
     } finally {
       setIsAdding(false);
@@ -212,7 +251,7 @@ export default function AdminDashboard() {
             <Database className="w-8 h-8 text-primary" />
             Foundation Data Explorer
           </h1>
-          <p className="text-muted-foreground mt-1">Manage your Firebase collections in real-time.</p>
+          <p className="text-muted-foreground mt-1">Manage your CMS collections and verify database connectivity.</p>
         </div>
         <div className="flex gap-3">
           <Button 
@@ -222,11 +261,11 @@ export default function AdminDashboard() {
             className="gap-2 border-primary/20 text-primary hover:bg-primary/5"
           >
             {isSeeding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-            Seed All Collections
+            Seed CMS Content
           </Button>
           <Button onClick={addSampleData} disabled={isAdding || !db} className="gap-2">
             {isAdding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-            Add Sample {activeTab}
+            Add {activeTab}
           </Button>
         </div>
       </div>
@@ -244,6 +283,7 @@ export default function AdminDashboard() {
           <CollectionTable 
             data={initiatives} 
             loading={loadingInitiatives}
+            error={errorInitiatives}
             columns={['Title', 'Category', 'Status']}
             renderRow={(item: any) => (
               <TableRow key={item.id}>
@@ -259,6 +299,7 @@ export default function AdminDashboard() {
           <CollectionTable 
             data={news} 
             loading={loadingNews}
+            error={errorNews}
             columns={['Date', 'Title', 'Author']}
             renderRow={(item: any) => (
               <TableRow key={item.id}>
@@ -274,6 +315,7 @@ export default function AdminDashboard() {
           <CollectionTable 
             data={stories} 
             loading={loadingStories}
+            error={errorStories}
             columns={['Name', 'Location', 'Story Preview']}
             renderRow={(item: any) => (
               <TableRow key={item.id}>
@@ -291,6 +333,7 @@ export default function AdminDashboard() {
           <CollectionTable 
             data={partners} 
             loading={loadingPartners}
+            error={errorPartners}
             columns={['Partner Name', 'Type']}
             renderRow={(item: any) => (
               <TableRow key={item.id}>
@@ -302,25 +345,52 @@ export default function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="donations">
-          <CollectionTable 
-            data={donations} 
-            loading={loadingDonations}
-            columns={['Donor', 'Amount', 'Program']}
-            renderRow={(item: any) => (
-              <TableRow key={item.id}>
-                <TableCell className="font-medium">{item.donorName}</TableCell>
-                <TableCell className="text-green-600 font-bold">${item.amount}</TableCell>
-                <TableCell>{item.program}</TableCell>
-              </TableRow>
-            )}
-          />
+          <div className="space-y-4">
+            <Alert className="border-primary/20 bg-primary/5">
+              <Info className="h-4 w-4" />
+              <AlertTitle className="font-bold">Restricted Collection</AlertTitle>
+              <AlertDescription>
+                Donations are restricted for security and are not seeded or listed from the public admin client. 
+                Please use the Firebase Console for sensitive data management.
+              </AlertDescription>
+            </Alert>
+            <CollectionTable 
+              data={donations} 
+              loading={loadingDonations}
+              error={errorDonations}
+              columns={['Donor', 'Amount', 'Program']}
+              renderRow={(item: any) => (
+                <TableRow key={item.id}>
+                  <TableCell className="font-medium">{item.donorName}</TableCell>
+                  <TableCell className="text-green-600 font-bold">${item.amount}</TableCell>
+                  <TableCell>{item.program}</TableCell>
+                </TableRow>
+              )}
+            />
+          </div>
         </TabsContent>
       </Tabs>
     </div>
   );
 }
 
-function CollectionTable({ data, loading, columns, renderRow }: any) {
+function CollectionTable({ data, loading, error, columns, renderRow }: any) {
+  if (error && error.code === 'permission-denied') {
+    return (
+      <Card className="border-destructive/20 bg-destructive/5">
+        <CardContent className="pt-6 flex flex-col items-center py-12 gap-4 text-center">
+          <ShieldAlert className="w-12 h-12 text-destructive" />
+          <div className="space-y-1">
+            <h3 className="font-bold text-destructive">Permission Denied</h3>
+            <p className="text-sm text-destructive/80">
+              Firestore security rules restrict read access to this collection.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="shadow-xl">
       <CardContent className="pt-6">
@@ -329,7 +399,7 @@ function CollectionTable({ data, loading, columns, renderRow }: any) {
         ) : !data || data.length === 0 ? (
           <div className="text-center py-10 text-muted-foreground flex flex-col items-center gap-2">
             <AlertCircle className="w-8 h-8 opacity-20" />
-            <p>No records found in this collection. Click "Add Sample" to begin.</p>
+            <p>No records found. Click "Add Sample" to populate.</p>
           </div>
         ) : (
           <Table>
