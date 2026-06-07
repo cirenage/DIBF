@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from 'react';
@@ -11,8 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, CheckCircle2, Heart, Users, Shield, Globe, Sprout, Loader2, Calendar } from 'lucide-react';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { ArrowRight, Calendar, Loader2, Heart, Globe, Sprout } from 'lucide-react';
 import { ScrollReveal, RevealItem } from '@/components/shared/ScrollReveal';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, limit, orderBy } from 'firebase/firestore';
@@ -23,37 +21,23 @@ export default function Home() {
   // Fetch featured initiatives
   const initiativesRef = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'initiatives'), where('published', '==', true), limit(3));
+    return query(collection(db, 'initiatives'), where('featured', '==', true), limit(3));
   }, [db]);
   const { data: initiatives, loading: initiativesLoading } = useCollection(initiativesRef);
 
   // Fetch upcoming events
   const eventsRef = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'events'), where('status', '==', 'upcoming'), orderBy('date', 'asc'), limit(3));
+    return query(collection(db, 'events'), where('status', '==', 'upcoming'), orderBy('eventDate', 'asc'), limit(3));
   }, [db]);
   const { data: events, loading: eventsLoading } = useCollection(eventsRef);
 
   // Fetch partners
   const partnersRef = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'partners'), limit(6));
+    return query(collection(db, 'partners'), where('featured', '==', true), limit(6));
   }, [db]);
   const { data: partners } = useCollection(partnersRef);
-
-  const focusAreas = [
-    "Health and Wellbeing", "Community Development", "Youth Leadership", "Mental Health Awareness", 
-    "Women and Family Support", "Education and Learning", "Humanitarian Initiatives", 
-    "Sustainable Giving", "Global Collaboration"
-  ];
-
-  const trustFactors = [
-    { title: "Healthcare-Informed Impact", icon: Shield },
-    { title: "Community-Centered Development", icon: Users },
-    { title: "Sustainable Giving Model", icon: Sprout },
-    { title: "Partnership-Driven Results", icon: Heart },
-    { title: "Africa-Rooted Global Reach", icon: Globe }
-  ];
 
   return (
     <div className="space-y-0">
@@ -63,6 +47,8 @@ export default function Home() {
         <MissionVision />
       </ScrollReveal>
       
+      <WhatWeDoGrid />
+
       {/* Dynamic Initiatives Section */}
       <section className="py-24 bg-muted/30">
         <div className="container mx-auto px-4">
@@ -82,7 +68,7 @@ export default function Home() {
                   <Card className="overflow-hidden border-none shadow-lg group hover:shadow-2xl transition-all duration-500 h-full flex flex-col">
                     <div className="relative h-64 overflow-hidden">
                       <Image 
-                        src={item.imageUrl || "https://picsum.photos/seed/dibf/600/400"} 
+                        src={item.imageUrl || "https://images.unsplash.com/photo-1576091160550-2173dba999ef"} 
                         alt={item.title} 
                         fill 
                         className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
@@ -93,10 +79,10 @@ export default function Home() {
                     </div>
                     <CardContent className="p-6 flex-1">
                       <h3 className="text-xl font-bold font-headline mb-3 text-secondary">{item.title}</h3>
-                      <p className="text-muted-foreground text-sm line-clamp-3 leading-relaxed">{item.description}</p>
+                      <p className="text-muted-foreground text-sm line-clamp-3 leading-relaxed">{item.summary || item.description}</p>
                     </CardContent>
                     <CardFooter className="p-6 pt-0">
-                      <Button asChild variant="link" className="p-0 h-auto text-primary gap-2 group-hover:gap-3 transition-all">
+                      <Button asChild variant="link" className="p-0 h-auto text-primary gap-2 group-hover:gap-3 transition-all font-bold">
                         <Link href="/initiatives">Learn more <ArrowRight className="w-4 h-4" /></Link>
                       </Button>
                     </CardFooter>
@@ -105,7 +91,7 @@ export default function Home() {
               ))}
             </ScrollReveal>
           ) : (
-            <div className="text-center py-12 text-muted-foreground italic">Seeding collections via Admin Dashboard will populate this section.</div>
+            <div className="text-center py-12 text-muted-foreground italic">Seed database via Admin Dashboard to view content.</div>
           )}
         </div>
       </section>
@@ -126,11 +112,11 @@ export default function Home() {
                     <div className="p-6 space-y-4">
                       <div className="flex items-center gap-2 text-primary font-bold">
                         <Calendar className="w-4 h-4" />
-                        <span className="text-sm">{new Date(event.date).toLocaleDateString()}</span>
+                        <span className="text-sm">{event.eventDate ? new Date(event.eventDate).toLocaleDateString() : 'Date TBD'}</span>
                       </div>
                       <h3 className="text-xl font-bold text-secondary">{event.title}</h3>
                       <p className="text-sm text-muted-foreground">{event.location}</p>
-                      <Button asChild variant="outline" className="w-full">
+                      <Button asChild variant="outline" className="w-full font-bold">
                         <Link href="/contact">Register Interest</Link>
                       </Button>
                     </div>
@@ -138,14 +124,14 @@ export default function Home() {
                 </ScrollReveal>
               ))
             ) : (
-              <div className="col-span-full text-center py-8 text-muted-foreground">No upcoming events scheduled.</div>
+              <div className="col-span-full text-center py-8 text-muted-foreground italic">No upcoming events scheduled.</div>
             )}
           </div>
         </div>
       </section>
 
       {/* Partners Logos Bar */}
-      {partners.length > 0 && (
+      {partners && partners.length > 0 && (
         <section className="py-16 bg-muted/20 border-y border-muted-foreground/10">
           <div className="container mx-auto px-4">
             <p className="text-center text-xs uppercase tracking-widest text-muted-foreground mb-8 font-bold">Trusted by Global Partners</p>
@@ -175,14 +161,14 @@ export default function Home() {
                 <Button asChild size="lg" variant="secondary" className="px-8 font-bold">
                   <Link href="/partnerships">Become a Partner</Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className="px-8 text-white border-white/40">
+                <Button asChild size="lg" variant="outline" className="px-8 text-white border-white/40 font-bold hover:bg-white/10">
                   <Link href="/contact">Inquire Now</Link>
                 </Button>
               </div>
             </ScrollReveal>
             <ScrollReveal direction="right" className="hidden lg:block relative h-[350px]">
                <Image 
-                  src="https://picsum.photos/seed/partner-cta/800/600"
+                  src="https://images.unsplash.com/photo-1521737711867-e3b97375f902"
                   alt="Global Partnerships"
                   fill
                   className="object-cover rounded-2xl shadow-2xl"
@@ -201,7 +187,7 @@ export default function Home() {
                 <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center"><Heart className="w-6 h-6" /></div>
                 <h3 className="text-xl font-bold font-headline">Volunteer</h3>
                 <p className="text-muted-foreground text-sm">Join our medical outreach missions or support our operations remotely with your unique skills.</p>
-                <Button asChild variant="outline" className="w-full">
+                <Button asChild variant="outline" className="w-full font-bold">
                   <Link href="/contact">Learn More</Link>
                 </Button>
               </Card>
@@ -211,7 +197,7 @@ export default function Home() {
                 <div className="w-12 h-12 bg-teal-100 text-teal-600 rounded-lg flex items-center justify-center"><Globe className="w-6 h-6" /></div>
                 <h3 className="text-xl font-bold font-headline">Institutional Support</h3>
                 <p className="text-muted-foreground text-sm">Bring your team or institution to Africa for a transformative shared service experience.</p>
-                <Button asChild variant="outline" className="w-full">
+                <Button asChild variant="outline" className="w-full font-bold">
                   <Link href="/partnerships">Bring a Team</Link>
                 </Button>
               </Card>
@@ -221,7 +207,7 @@ export default function Home() {
                 <div className="w-12 h-12 bg-white/20 text-white rounded-lg flex items-center justify-center"><Sprout className="w-6 h-6" /></div>
                 <h3 className="text-xl font-bold font-headline">Donate</h3>
                 <p className="text-white/80 text-sm">Every contribution fuels sustainable clinics, student scholarships, and life-saving interventions.</p>
-                <Button asChild className="w-full bg-white text-primary hover:bg-white/90">
+                <Button asChild className="w-full bg-white text-primary hover:bg-white/90 font-bold">
                   <Link href="/give">Give Now</Link>
                 </Button>
               </Card>
