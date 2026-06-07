@@ -1,0 +1,158 @@
+
+{
+  "entities": {
+    "Initiative": {
+      "title": "Initiative",
+      "description": "A flagship program or project of the foundation.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "slug": { "type": "string" },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "content": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "featured": { "type": "boolean" },
+        "published": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "slug", "description"]
+    },
+    "NewsPost": {
+      "title": "News Post",
+      "description": "Updates, insights, and blog posts.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "slug": { "type": "string" },
+        "excerpt": { "type": "string" },
+        "content": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "published": { "type": "boolean" },
+        "author": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "slug", "content"]
+    },
+    "ImpactStory": {
+      "title": "Impact Story",
+      "description": "Personal narratives of community impact.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "beneficiaryName": { "type": "string" },
+        "location": { "type": "string" },
+        "story": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "featured": { "type": "boolean" },
+        "published": { "type": "boolean" }
+      },
+      "required": ["beneficiaryName", "story"]
+    },
+    "Partner": {
+      "title": "Partner",
+      "description": "Collaborating institutions and organizations.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "website": { "type": "string" },
+        "description": { "type": "string" },
+        "partnerType": { "type": "string", "enum": ["University", "Corporate", "Foundation", "NGO"] }
+      },
+      "required": ["name", "partnerType"]
+    },
+    "Event": {
+      "title": "Event",
+      "description": "Foundation events and outreaches.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "slug": { "type": "string" },
+        "description": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "location": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "status": { "type": "string", "enum": ["upcoming", "past", "cancelled"] }
+      },
+      "required": ["title", "date", "location"]
+    },
+    "TeamMember": {
+      "title": "Team Member",
+      "description": "Foundation leadership and staff.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "bio": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "order": { "type": "number" }
+      },
+      "required": ["name", "role"]
+    },
+    "Publication": {
+      "title": "Publication",
+      "description": "Reports, research papers, and documents.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "fileUrl": { "type": "string" },
+        "publishedAt": { "type": "string", "format": "date" }
+      },
+      "required": ["title", "category"]
+    },
+    "GalleryItem": {
+      "title": "Gallery Item",
+      "description": "Photos from the field and events.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "category": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["imageUrl"]
+    },
+    "FAQ": {
+      "title": "FAQ",
+      "description": "Frequently asked questions.",
+      "type": "object",
+      "properties": {
+        "question": { "type": "string" },
+        "answer": { "type": "string" },
+        "category": { "type": "string" },
+        "order": { "type": "number" }
+      },
+      "required": ["question", "answer"]
+    },
+    "ImpactStat": {
+      "title": "Impact Stat",
+      "description": "Key statistics shown on the homepage.",
+      "type": "object",
+      "properties": {
+        "label": { "type": "string" },
+        "value": { "type": "string" },
+        "icon": { "type": "string" }
+      },
+      "required": ["label", "value"]
+    }
+  },
+  "auth": {
+    "providers": ["google.com"]
+  },
+  "firestore": {
+    "/initiatives/{id}": { "schema": "Initiative", "description": "Foundation initiatives" },
+    "/news/{id}": { "schema": "NewsPost", "description": "News and updates" },
+    "/impactStories/{id}": { "schema": "ImpactStory", "description": "Personal narratives" },
+    "/partners/{id}": { "schema": "Partner", "description": "Partner organizations" },
+    "/events/{id}": { "schema": "Event", "description": "Outreaches and events" },
+    "/teamMembers/{id}": { "schema": "TeamMember", "description": "Staff and leadership" },
+    "/publications/{id}": { "schema": "Publication", "description": "Reports and research" },
+    "/gallery/{id}": { "schema": "GalleryItem", "description": "Media gallery" },
+    "/faqs/{id}": { "schema": "FAQ", "description": "Frequently asked questions" },
+    "/impactStats/{id}": { "schema": "ImpactStat", "description": "Homepage statistics" },
+    "/donations/{id}": { "schema": { "$ref": "#/backend/entities/Donation" }, "description": "Restricted donation records" }
+  }
+}
