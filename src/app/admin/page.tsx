@@ -20,7 +20,8 @@ import {
   ExternalLink,
   Users,
   Handshake,
-  DollarSign
+  DollarSign,
+  Sparkles
 } from 'lucide-react';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -31,6 +32,7 @@ export default function AdminDashboard() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = React.useState('initiatives');
   const [isAdding, setIsAdding] = React.useState(false);
+  const [isSeeding, setIsSeeding] = React.useState(false);
 
   // Queries
   const initiativesRef = useMemoFirebase(() => db ? collection(db, 'initiatives') : null, [db]);
@@ -48,58 +50,76 @@ export default function AdminDashboard() {
   const donationsRef = useMemoFirebase(() => db ? collection(db, 'donations') : null, [db]);
   const { data: donations, loading: loadingDonations } = useCollection(donationsRef);
 
+  const getSampleData = (type: string) => {
+    switch(type) {
+      case 'initiatives':
+        return {
+          title: "The Tinewonsa Project",
+          description: "Revolutionizing primary healthcare delivery in rural Africa through community-led clinical hubs.",
+          category: "Healthcare Delivery",
+          imageUrl: `https://picsum.photos/seed/tinewonsa/600/400`,
+          active: true,
+          createdAt: serverTimestamp(),
+        };
+      case 'news':
+        return {
+          title: "Expansion into East Africa",
+          content: "We are excited to announce our new partnership for the Kenya Health Initiative.",
+          date: new Date().toISOString().split('T')[0],
+          author: "DIBF Communications",
+        };
+      case 'impactStories':
+        return {
+          name: "Amara Okoro",
+          story: "The medical scholarship from DIBF allowed me to complete my residency and return to serve my village.",
+          location: "Enugu, Nigeria",
+        };
+      case 'partners':
+        return {
+          name: "Global Health Alliance",
+          type: "NGO",
+        };
+      case 'donations':
+        return {
+          donorName: "John Smith",
+          amount: 250,
+          timestamp: new Date().toISOString(),
+          program: "Dollar-A-Day Campaign",
+        };
+      default:
+        return {};
+    }
+  };
+
+  const seedAllCollections = async () => {
+    if (!db) return;
+    setIsSeeding(true);
+    const collections = ['initiatives', 'news', 'impactStories', 'partners', 'donations'];
+    
+    try {
+      for (const colName of collections) {
+        const ref = collection(db, colName);
+        const data = getSampleData(colName);
+        await addDoc(ref, data);
+      }
+      toast({ title: "Database Seeded", description: "Sample records added to all collections." });
+    } catch (err) {
+      toast({ variant: "destructive", title: "Seeding Failed", description: "Check your Firebase keys and Security Rules." });
+    } finally {
+      setIsSeeding(false);
+    }
+  };
+
   const addSampleData = () => {
     if (!db) return;
     setIsAdding(true);
 
     const ref = collection(db, activeTab);
-    let data = {};
-
-    switch(activeTab) {
-      case 'initiatives':
-        data = {
-          title: "New Health Initiative",
-          description: "Providing essential medical care to rural communities.",
-          category: "Healthcare",
-          imageUrl: `https://picsum.photos/seed/${Math.random()}/600/400`,
-          active: true,
-          createdAt: serverTimestamp(),
-        };
-        break;
-      case 'news':
-        data = {
-          title: "Annual Impact Report",
-          content: "We've reached over 10,000 community members this year.",
-          date: new Date().toISOString().split('T')[0],
-          author: "DIBF Team",
-        };
-        break;
-      case 'impactStories':
-        data = {
-          name: "Amara",
-          story: "The scholarship changed my life and allowed me to pursue my dreams.",
-          location: "Nairobi",
-        };
-        break;
-      case 'partners':
-        data = {
-          name: "Global Health Foundation",
-          type: "Foundation",
-        };
-        break;
-      case 'donations':
-        data = {
-          donorName: "Anonymous",
-          amount: 100,
-          timestamp: new Date().toISOString(),
-          program: "General Fund",
-        };
-        break;
-    }
+    const data = getSampleData(activeTab);
 
     addDoc(ref, data)
       .then(() => {
-        toast({ title: "Success", description: `Added to ${activeTab}` });
+        toast({ title: "Success", description: `Added a sample to ${activeTab}` });
       })
       .catch(async (err) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -121,10 +141,21 @@ export default function AdminDashboard() {
           </h1>
           <p className="text-muted-foreground mt-1">Manage your Firebase collections in real-time.</p>
         </div>
-        <Button onClick={addSampleData} disabled={isAdding || !db} className="gap-2">
-          {isAdding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-          Add Sample {activeTab}
-        </Button>
+        <div className="flex gap-3">
+          <Button 
+            variant="outline" 
+            onClick={seedAllCollections} 
+            disabled={isSeeding || !db}
+            className="gap-2 border-primary/20 text-primary hover:bg-primary/5"
+          >
+            {isSeeding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+            Seed All Collections
+          </Button>
+          <Button onClick={addSampleData} disabled={isAdding || !db} className="gap-2">
+            {isAdding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+            Add Sample {activeTab}
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="initiatives" onValueChange={setActiveTab} className="space-y-6">
@@ -175,7 +206,9 @@ export default function AdminDashboard() {
               <TableRow key={item.id}>
                 <TableCell className="font-bold">{item.name}</TableCell>
                 <TableCell>{item.location}</TableCell>
-                <TableCell className="truncate max-w-xs">"{item.story}"</TableCell>
+                <TableCell className="max-w-xs overflow-hidden text-ellipsis whitespace-nowrap italic">
+                  "{item.story}"
+                </TableCell>
               </TableRow>
             )}
           />
@@ -221,7 +254,10 @@ function CollectionTable({ data, loading, columns, renderRow }: any) {
         {loading ? (
           <div className="flex justify-center py-10"><RefreshCcw className="w-8 h-8 animate-spin text-primary opacity-20" /></div>
         ) : !data || data.length === 0 ? (
-          <div className="text-center py-10 text-muted-foreground">No records found. Add a sample to begin.</div>
+          <div className="text-center py-10 text-muted-foreground flex flex-col items-center gap-2">
+            <AlertCircle className="w-8 h-8 opacity-20" />
+            <p>No records found in this collection. Click "Add Sample" to begin.</p>
+          </div>
         ) : (
           <Table>
             <TableHeader><TableRow>{columns.map((col: string) => <TableHead key={col}>{col}</TableHead>)}</TableRow></TableHeader>
