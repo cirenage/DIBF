@@ -1,4 +1,3 @@
-
 'use client';
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
@@ -9,10 +8,10 @@ import { firebaseConfig, isFirebaseConfigValid } from './config';
 
 /**
  * Initializes Firebase services safely.
- * Returns null for services if the configuration is invalid or missing.
  */
 export function initializeFirebase() {
   if (!isFirebaseConfigValid) {
+    console.error("Firebase config is invalid. Check .env.local");
     return { app: null, db: null, auth: null, storage: null };
   }
 
@@ -21,6 +20,11 @@ export function initializeFirebase() {
     const db = getFirestore(app);
     const auth = getAuth(app);
     const storage = getStorage(app);
+
+    // Debugging connection
+    if (typeof window !== 'undefined') {
+      console.log("Firebase Initialized for project:", firebaseConfig.projectId);
+    }
 
     return { app, db, auth, storage };
   } catch (error) {

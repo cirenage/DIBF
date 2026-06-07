@@ -23,14 +23,15 @@ export default function Home() {
     if (!db) return null;
     return query(collection(db, 'initiatives'), where('featured', '==', true), limit(3));
   }, [db]);
-  const { data: initiatives, loading: initiativesLoading } = useCollection(initiativesRef);
+  const { data: initiatives, loading: initiativesLoading, error: initiativesError } = useCollection(initiativesRef);
 
   // Fetch upcoming events
   const eventsRef = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'events'), where('status', '==', 'upcoming'), orderBy('eventDate', 'asc'), limit(3));
+    // Note: Simple collection query to avoid index requirements during initial rules debug
+    return query(collection(db, 'events'), limit(3));
   }, [db]);
-  const { data: events, loading: eventsLoading } = useCollection(eventsRef);
+  const { data: events, loading: eventsLoading, error: eventsError } = useCollection(eventsRef);
 
   // Fetch partners
   const partnersRef = useMemoFirebase(() => {
@@ -38,6 +39,12 @@ export default function Home() {
     return query(collection(db, 'partners'), where('featured', '==', true), limit(6));
   }, [db]);
   const { data: partners } = useCollection(partnersRef);
+
+  // Debug errors
+  React.useEffect(() => {
+    if (eventsError) console.error("Homepage Events Query Error:", eventsError);
+    if (initiativesError) console.error("Homepage Initiatives Query Error:", initiativesError);
+  }, [eventsError, initiativesError]);
 
   return (
     <div className="space-y-0">
@@ -91,7 +98,9 @@ export default function Home() {
               ))}
             </ScrollReveal>
           ) : (
-            <div className="text-center py-12 text-muted-foreground italic">Seed database via Admin Dashboard to view content.</div>
+            <div className="text-center py-12 text-muted-foreground italic">
+              {initiativesError ? "Unable to load initiatives. Please check permissions." : "Seed database via Admin Dashboard to view content."}
+            </div>
           )}
         </div>
       </section>
@@ -124,7 +133,9 @@ export default function Home() {
                 </ScrollReveal>
               ))
             ) : (
-              <div className="col-span-full text-center py-8 text-muted-foreground italic">No upcoming events scheduled.</div>
+              <div className="col-span-full text-center py-8 text-muted-foreground italic">
+                {eventsError ? "Security access restricted for events." : "No upcoming events scheduled."}
+              </div>
             )}
           </div>
         </div>
@@ -137,7 +148,7 @@ export default function Home() {
             <p className="text-center text-xs uppercase tracking-widest text-muted-foreground mb-8 font-bold">Trusted by Global Partners</p>
             <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-60">
               {partners.map((partner: any) => (
-                <div key={partner.id} className="grayscale hover:grayscale-0 transition-all cursor-default text-lg font-bold text-secondary">
+                <div key={partner.id} className="grayscale hover:grayscale-0 transition-all cursor-default text-lg font-bold text-secondary text-center px-4">
                   {partner.name}
                 </div>
               ))}

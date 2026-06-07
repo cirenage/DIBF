@@ -9,7 +9,9 @@ import {
   query, 
   getDocs, 
   limit, 
-  Firestore 
+  Firestore,
+  DocumentData,
+  Query
 } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,9 +20,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Database, 
-  Plus, 
-  Loader2, 
   Sparkles, 
+  Loader2, 
   LayoutGrid,
   Users,
   Handshake,
@@ -31,9 +32,11 @@ import {
   FileText,
   Mail,
   UserPlus,
-  Briefcase
+  Briefcase,
+  AlertTriangle
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { firebaseConfig } from '@/firebase/config';
 
 export default function AdminDashboard() {
   const db = useFirestore();
@@ -55,17 +58,24 @@ export default function AdminDashboard() {
   const partnershipsRef = useMemoFirebase(() => db ? collection(db, 'partnershipRequests') : null, [db]);
 
   // Data Subscriptions
-  const { data: initiatives, loading: loadingInitiatives } = useCollection(initiativesRef);
-  const { data: news, loading: loadingNews } = useCollection(newsRef);
-  const { data: stories, loading: loadingStories } = useCollection(storiesRef);
-  const { data: partners, loading: loadingPartners } = useCollection(partnersRef);
-  const { data: events, loading: loadingEvents } = useCollection(eventsRef);
-  const { data: team, loading: loadingTeam } = useCollection(teamRef);
-  const { data: publications, loading: loadingPublications } = useCollection(publicationsRef);
-  const { data: donations } = useCollection(donationsRef);
-  const { data: contacts } = useCollection(contactsRef);
-  const { data: volunteers } = useCollection(volunteersRef);
-  const { data: partnershipReqs } = useCollection(partnershipsRef);
+  const { data: initiatives, loading: loadingInitiatives, error: errorInitiatives } = useCollection(initiativesRef);
+  const { data: news, loading: loadingNews, error: errorNews } = useCollection(newsRef);
+  const { data: stories, loading: loadingStories, error: errorStories } = useCollection(storiesRef);
+  const { data: partners, loading: loadingPartners, error: errorPartners } = useCollection(partnersRef);
+  const { data: events, loading: loadingEvents, error: errorEvents } = useCollection(eventsRef);
+  const { data: team, loading: loadingTeam, error: errorTeam } = useCollection(teamRef);
+  const { data: publications, loading: loadingPublications, error: errorPublications } = useCollection(publicationsRef);
+  const { data: donations, error: errorDonations } = useCollection(donationsRef);
+  const { data: contacts, error: errorContacts } = useCollection(contactsRef);
+  const { data: volunteers, error: errorVolunteers } = useCollection(volunteersRef);
+  const { data: partnershipReqs, error: errorPartnerships } = useCollection(partnershipsRef);
+
+  // Debugging Connection
+  React.useEffect(() => {
+    console.log("Admin Hub: Checking Connection...");
+    console.log("Target Project ID:", firebaseConfig.projectId);
+    if (errorEvents) console.error("Admin Hub: Events Access Error:", errorEvents);
+  }, [errorEvents]);
 
   const getSeedData = (colName: string): any[] => {
     switch(colName) {
@@ -195,35 +205,51 @@ export default function AdminDashboard() {
       'volunteerRequests', 'partnershipRequests'
     ];
     
-    const results = { seeded: [] as string[], skipped: [] as string[], failed: [] as string[] };
+    const summary = { seeded: [] as string[], skipped: [] as string[], failed: [] as string[] };
+
+    const withTimeout = (promise: Promise<any>, timeoutMs: number = 10000) => {
+      return Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), timeoutMs))
+      ]);
+    };
 
     try {
       for (const colName of collectionsToSeed) {
-        const colRef = collection(db, colName);
-        const snapshot = await getDocs(query(colRef, limit(1)));
-        
-        if (!snapshot.empty) {
-          results.skipped.push(colName);
-          continue;
-        }
+        try {
+          const colRef = collection(db, colName);
+          // Fast check if already seeded
+          const snapshot = await withTimeout(getDocs(query(colRef, limit(1))));
+          
+          if (!snapshot.empty) {
+            summary.skipped.push(colName);
+            continue;
+          }
 
-        const samples = getSeedData(colName);
-        for (const item of samples) {
-          await addDoc(colRef, { ...item, createdAt: serverTimestamp() });
+          const samples = getSeedData(colName);
+          const promises = samples.map(item => addDoc(colRef, { ...item, createdAt: serverTimestamp() }));
+          await withTimeout(Promise.all(promises));
+          summary.seeded.push(`${colName} (${samples.length})`);
+        } catch (err: any) {
+          console.error(`Failed to seed ${colName}:`, err);
+          if (err.code === 'permission-denied') {
+             summary.failed.push(`${colName} (Permission Denied)`);
+          } else {
+             summary.failed.push(`${colName} (Error)`);
+          }
         }
-        results.seeded.push(`${colName} (${samples.length})`);
       }
 
       toast({ 
-        title: "Database Seeded", 
-        description: `Seeded: ${results.seeded.length}. Skipped: ${results.skipped.length}.` 
+        title: "Seeding Complete", 
+        description: `Seeded: ${summary.seeded.length}. Skipped: ${summary.skipped.length}. Failed: ${summary.failed.length}.` 
       });
-    } catch (err: any) {
-      console.error(err);
+    } catch (globalErr: any) {
+      console.error("Global Seeding Failure:", globalErr);
       toast({ 
         variant: "destructive",
-        title: "Seeding Failed", 
-        description: err.code === 'permission-denied' ? "Firestore permission denied. Check rules." : "An error occurred." 
+        title: "Seeding Error", 
+        description: globalErr.message || "A critical error occurred while seeding." 
       });
     } finally {
       setIsSeeding(false);
@@ -239,6 +265,10 @@ export default function AdminDashboard() {
             Foundation Data Hub
           </h1>
           <p className="text-muted-foreground mt-2">Manage all DIBF website content and collections from a central dashboard.</p>
+          <div className="flex items-center gap-2 mt-2 text-xs font-mono bg-muted p-2 rounded w-fit">
+            <span className="text-muted-foreground">Project:</span>
+            <span className="text-primary font-bold">{firebaseConfig.projectId || "Not Configured"}</span>
+          </div>
         </div>
         <Button 
           onClick={seedDatabase} 
@@ -268,7 +298,10 @@ export default function AdminDashboard() {
         <Card className="shadow-xl border-none">
           <CardContent className="pt-6">
             <TabsContent value="initiatives">
-               <CollectionTable data={initiatives} loading={loadingInitiatives} 
+               <CollectionTable 
+                data={initiatives} 
+                loading={loadingInitiatives} 
+                error={errorInitiatives}
                 columns={['Title', 'Category', 'Status']}
                 renderRow={(item: any) => (
                   <TableRow key={item.id}>
@@ -278,9 +311,11 @@ export default function AdminDashboard() {
                   </TableRow>
                 )} />
             </TabsContent>
-            {/* ... other tab contents simplified for context ... */}
             <TabsContent value="news">
-               <CollectionTable data={news} loading={loadingNews} 
+               <CollectionTable 
+                data={news} 
+                loading={loadingNews} 
+                error={errorNews}
                 columns={['Title', 'Author', 'Featured']}
                 renderRow={(item: any) => (
                   <TableRow key={item.id}>
@@ -290,7 +325,36 @@ export default function AdminDashboard() {
                   </TableRow>
                 )} />
             </TabsContent>
-            {/* Remaining tab contents follow similar pattern */}
+            <TabsContent value="events">
+               <CollectionTable 
+                data={events} 
+                loading={loadingEvents} 
+                error={errorEvents}
+                columns={['Title', 'Date', 'Location', 'Status']}
+                renderRow={(item: any) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="font-bold">{item.title}</TableCell>
+                    <TableCell>{item.eventDate}</TableCell>
+                    <TableCell>{item.location}</TableCell>
+                    <TableCell><Badge>{item.status}</Badge></TableCell>
+                  </TableRow>
+                )} />
+            </TabsContent>
+            <TabsContent value="teamMembers">
+               <CollectionTable 
+                data={team} 
+                loading={loadingTeam} 
+                error={errorTeam}
+                columns={['Name', 'Role', 'Featured']}
+                renderRow={(item: any) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="font-bold">{item.name}</TableCell>
+                    <TableCell>{item.role}</TableCell>
+                    <TableCell>{item.featured ? 'Yes' : 'No'}</TableCell>
+                  </TableRow>
+                )} />
+            </TabsContent>
+            {/* Other tabs follow same pattern */}
           </CardContent>
         </Card>
       </Tabs>
@@ -298,8 +362,15 @@ export default function AdminDashboard() {
   );
 }
 
-function CollectionTable({ data, loading, columns, renderRow }: any) {
+function CollectionTable({ data, loading, error, columns, renderRow }: any) {
   if (loading) return <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
+  if (error) return (
+    <div className="flex flex-col items-center justify-center py-12 text-destructive bg-destructive/5 rounded-lg border border-dashed border-destructive/20 m-4">
+      <AlertTriangle className="w-8 h-8 mb-2" />
+      <p className="font-bold">Access Denied</p>
+      <p className="text-sm opacity-80">Check your Firestore Security Rules for this collection.</p>
+    </div>
+  );
   if (!data || data.length === 0) return <div className="text-center py-12 text-muted-foreground italic">No data. Click "Seed Website Data" to populate.</div>;
 
   return (

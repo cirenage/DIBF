@@ -1,21 +1,22 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // CMS Content Collections: Publicly readable
-    match /initiatives/{id} { allow read: if true; allow write: if true; }
-    match /news/{id} { allow read: if true; allow write: if true; }
-    match /impactStories/{id} { allow read: if true; allow write: if true; }
-    match /partners/{id} { allow read: if true; allow write: if true; }
-    match /events/{id} { allow read: if true; allow write: if true; }
-    match /teamMembers/{id} { allow read: if true; allow write: if true; }
-    match /publications/{id} { allow read: if true; allow write: if true; }
-    
-    // Form Submission Collections: Publicly writable (for forms), readable by admin
-    match /contactMessages/{id} { allow create: if true; allow read, update, delete: if true; }
-    match /volunteerRequests/{id} { allow create: if true; allow read, update, delete: if true; }
-    match /partnershipRequests/{id} { allow create: if true; allow read, update, delete: if true; }
-
-    // Sensitive Collections: Restricted for production, allow for development seeding
+    // Blanket permissions for development to resolve path-specific denials
+    match /initiatives/{id} { allow read, write: if true; }
+    match /news/{id} { allow read, write: if true; }
+    match /impactStories/{id} { allow read, write: if true; }
+    match /partners/{id} { allow read, write: if true; }
+    match /events/{id} { allow read, write: if true; }
+    match /teamMembers/{id} { allow read, write: if true; }
+    match /publications/{id} { allow read, write: if true; }
     match /donations/{id} { allow read, write: if true; }
+    match /contactMessages/{id} { allow read, write: if true; }
+    match /volunteerRequests/{id} { allow read, write: if true; }
+    match /partnershipRequests/{id} { allow read, write: if true; }
+    
+    // Explicitly allow list operations for queries
+    match /{path=**}/events/{id} {
+      allow read, write: if true;
+    }
   }
 }
