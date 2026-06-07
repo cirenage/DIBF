@@ -5,11 +5,10 @@ import * as React from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, addDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { 
   Database, 
   Plus, 
@@ -19,13 +18,10 @@ import {
   FileText, 
   Heart, 
   LayoutGrid,
-  ExternalLink,
   Users,
   Handshake,
   DollarSign,
-  Sparkles,
-  ShieldAlert,
-  Key
+  Sparkles
 } from 'lucide-react';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -37,8 +33,6 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = React.useState('initiatives');
   const [isAdding, setIsAdding] = React.useState(false);
   const [isSeeding, setIsSeeding] = React.useState(false);
-
-  const isConfigured = !!db;
 
   // Queries
   const initiativesRef = useMemoFirebase(() => db ? collection(db, 'initiatives') : null, [db]);
@@ -151,42 +145,18 @@ export default function AdminDashboard() {
           <Button 
             variant="outline" 
             onClick={seedAllCollections} 
-            disabled={isSeeding || !isConfigured}
+            disabled={isSeeding || !db}
             className="gap-2 border-primary/20 text-primary hover:bg-primary/5"
           >
             {isSeeding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
             Seed All Collections
           </Button>
-          <Button onClick={addSampleData} disabled={isAdding || !isConfigured} className="gap-2">
+          <Button onClick={addSampleData} disabled={isAdding || !db} className="gap-2">
             {isAdding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
             Add Sample {activeTab}
           </Button>
         </div>
       </div>
-
-      {!isConfigured && (
-        <Alert variant="destructive" className="mb-8 border-2 bg-destructive/5">
-          <ShieldAlert className="h-5 w-5" />
-          <AlertTitle className="font-bold text-lg">Firebase Connection Required</AlertTitle>
-          <AlertDescription className="mt-2 space-y-4">
-            <p>
-              The application detected that your Firebase API keys are missing. This is why the management buttons are disabled.
-            </p>
-            <div className="bg-white/50 p-4 rounded-lg border border-destructive/20 text-secondary">
-              <h4 className="font-bold flex items-center gap-2 mb-2">
-                <Key className="w-4 h-4" /> How to fix this:
-              </h4>
-              <ol className="list-decimal ml-5 space-y-1 text-sm">
-                <li>Open your <strong>.env</strong> file in the sidebar.</li>
-                <li>Go to the <a href="https://console.firebase.google.com" target="_blank" rel="noopener noreferrer" className="underline font-bold text-primary inline-flex items-center gap-1">Firebase Console <ExternalLink className="w-3 h-3" /></a>.</li>
-                <li>Copy your <strong>SDK Setup and Configuration</strong> object.</li>
-                <li>Paste the values into the corresponding <code>NEXT_PUBLIC_FIREBASE_*</code> variables in <strong>.env</strong>.</li>
-                <li>Refresh this page.</li>
-              </ol>
-            </div>
-          </AlertDescription>
-        </Alert>
-      )}
 
       <Tabs defaultValue="initiatives" onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="flex flex-wrap h-auto gap-2 p-1 bg-muted rounded-xl">

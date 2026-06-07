@@ -1,8 +1,10 @@
+
 'use client';
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getAuth, Auth } from 'firebase/auth';
+import { getStorage, FirebaseStorage } from 'firebase/storage';
 import { firebaseConfig, isFirebaseConfigValid } from './config';
 
 /**
@@ -11,18 +13,19 @@ import { firebaseConfig, isFirebaseConfigValid } from './config';
  */
 export function initializeFirebase() {
   if (!isFirebaseConfigValid) {
-    return { app: null, db: null, auth: null };
+    return { app: null, db: null, auth: null, storage: null };
   }
 
   try {
     const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
+    const storage = getStorage(app);
 
-    return { app, db, auth };
+    return { app, db, auth, storage };
   } catch (error) {
     console.error("Firebase initialization failed:", error);
-    return { app: null, db: null, auth: null };
+    return { app: null, db: null, auth: null, storage: null };
   }
 }
 
