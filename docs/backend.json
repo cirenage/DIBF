@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "Initiative": {
@@ -154,5 +153,6 @@
     "/faqs/{id}": { "schema": "FAQ", "description": "Frequently asked questions" },
     "/impactStats/{id}": { "schema": "ImpactStat", "description": "Homepage statistics" },
     "/donations/{id}": { "schema": { "$ref": "#/backend/entities/Donation" }, "description": "Restricted donation records" }
-  }
+  },
+  "_version": "1.0.1"
 }

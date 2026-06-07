@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from 'react';
@@ -60,7 +59,6 @@ export default function AdminDashboard() {
   const galleryRef = useMemoFirebase(() => db ? collection(db, 'gallery') : null, [db]);
   const faqsRef = useMemoFirebase(() => db ? collection(db, 'faqs') : null, [db]);
   const statsRef = useMemoFirebase(() => db ? collection(db, 'impactStats') : null, [db]);
-  const donationsRef = useMemoFirebase(() => db ? collection(db, 'donations') : null, [db]);
 
   // Data Subscriptions
   const { data: initiatives, loading: loadingInitiatives } = useCollection(initiativesRef);
@@ -68,6 +66,11 @@ export default function AdminDashboard() {
   const { data: stories, loading: loadingStories } = useCollection(storiesRef);
   const { data: partners, loading: loadingPartners } = useCollection(partnersRef);
   const { data: events, loading: loadingEvents } = useCollection(eventsRef);
+  const { data: team, loading: loadingTeam } = useCollection(teamRef);
+  const { data: gallery, loading: loadingGallery } = useCollection(galleryRef);
+  const { data: faqs, loading: loadingFaqs } = useCollection(faqsRef);
+  const { data: stats, loading: loadingStats } = useCollection(statsRef);
+  const { data: publications, loading: loadingPublications } = useCollection(publicationsRef);
 
   const getSampleData = (type: string): any[] => {
     switch(type) {
@@ -78,35 +81,28 @@ export default function AdminDashboard() {
           { title: "African Field School", slug: "field-school", category: "Business & Leadership", description: "Practical medical education for international students.", featured: true, published: true, imageUrl: "https://picsum.photos/seed/school/600/400" },
           { title: "Maternal Health Initiative", slug: "maternal-health", category: "Women’s Health", description: "Supporting mothers with prenatal and postnatal care.", featured: false, published: true, imageUrl: "https://picsum.photos/seed/women/600/400" },
           { title: "Youth Mental Health Hub", slug: "youth-mental-health", category: "Youth Development", description: "Safe spaces and counseling for young people.", featured: false, published: true, imageUrl: "https://picsum.photos/seed/mental/600/400" },
-          { title: "Community Water Access", slug: "water-access", category: "Community Support", description: "Providing clean water to remote clinical hubs.", featured: false, published: true, imageUrl: "https://picsum.photos/seed/water/600/400" },
-          { title: "Rural Vaccination Drive", slug: "vaccinations", category: "Public Health Advocacy", description: "Expanding vaccine reach in underserved regions.", featured: false, published: true, imageUrl: "https://picsum.photos/seed/vaccine/600/400" },
-          { title: "Digital Health Training", slug: "digital-health", category: "Professional Development", description: "Equipping local doctors with telemedicine tools.", featured: false, published: true, imageUrl: "https://picsum.photos/seed/digital/600/400" }
+          { title: "Community Water Access", slug: "water-access", category: "Community Support", description: "Providing clean water to remote clinical hubs.", featured: false, published: true, imageUrl: "https://picsum.photos/seed/water/600/400" }
         ];
       case 'news':
         return [
           { title: "Expanding to Kenya", slug: "expanding-kenya", author: "DIBF Team", excerpt: "New clinical hubs opening in Nairobi's outskirts.", content: "Full content here...", published: true, imageUrl: "https://picsum.photos/seed/kenya/600/400" },
           { title: "Annual Impact Report 2023", slug: "report-2023", author: "Director", excerpt: "Over 15,000 lives impacted this year.", content: "Full content here...", published: true, imageUrl: "https://picsum.photos/seed/report/600/400" },
-          { title: "New Partnership with Global Health", slug: "partnership-global", author: "Comms", excerpt: "Joining forces for sustainable healthcare.", content: "Full content here...", published: true, imageUrl: "https://picsum.photos/seed/collab/600/400" },
-          { title: "Student Spotlight: Amara Okoro", slug: "student-spotlight", author: "Education Dept", excerpt: "From the field school to local residency.", content: "Full content here...", published: true, imageUrl: "https://picsum.photos/seed/amara/600/400" }
+          { title: "New Partnership with Global Health", slug: "partnership-global", author: "Comms", excerpt: "Joining forces for sustainable healthcare.", content: "Full content here...", published: true, imageUrl: "https://picsum.photos/seed/collab/600/400" }
         ];
       case 'impactStories':
         return [
           { beneficiaryName: "Grace Mensah", location: "Accra, Ghana", story: "The mobile clinic saved my child's life during the malaria outbreak.", title: "A Mother's Gratitude", featured: true, published: true, imageUrl: "https://picsum.photos/seed/grace/600/400" },
-          { beneficiaryName: "Kofi Owusu", location: "Kumasi, Ghana", story: "I learned how to manage my diabetes through DIBF education programs.", title: "Living Better", featured: true, published: true, imageUrl: "https://picsum.photos/seed/kofi/600/400" },
-          { beneficiaryName: "Sarah Juma", location: "Nairobi, Kenya", story: "DIBF scholarship allowed me to finish my nursing degree.", title: "Empowered Education", featured: true, published: true, imageUrl: "https://picsum.photos/seed/sarah/600/400" }
+          { beneficiaryName: "Kofi Owusu", location: "Kumasi, Ghana", story: "I learned how to manage my diabetes through DIBF education programs.", title: "Living Better", featured: true, published: true, imageUrl: "https://picsum.photos/seed/kofi/600/400" }
         ];
       case 'partners':
         return [
           { name: "University of Ghana", partnerType: "University", website: "https://ug.edu.gh", description: "Academic and research partner.", logoUrl: "https://picsum.photos/seed/ug/200/200" },
-          { name: "MedTech Global", partnerType: "Corporate", website: "https://medtech.com", description: "Medical equipment sponsor.", logoUrl: "https://picsum.photos/seed/medtech/200/200" },
-          { name: "The Ford Foundation", partnerType: "Foundation", website: "https://fordfound.org", description: "Strategic funding partner.", logoUrl: "https://picsum.photos/seed/ford/200/200" },
-          { name: "Red Cross Africa", partnerType: "NGO", website: "https://redcross.org", description: "Logistics and emergency support.", logoUrl: "https://picsum.photos/seed/redcross/200/200" }
+          { name: "MedTech Global", partnerType: "Corporate", website: "https://medtech.com", description: "Medical equipment sponsor.", logoUrl: "https://picsum.photos/seed/medtech/200/200" }
         ];
       case 'events':
         return [
           { title: "DIBF Global Gala 2024", slug: "gala-2024", date: "2024-12-15", location: "London, UK", status: "upcoming", description: "Our annual fundraising event.", imageUrl: "https://picsum.photos/seed/gala/600/400" },
-          { title: "Rural Outreach: Volta Region", slug: "volta-2024", date: "2024-10-20", location: "Volta, Ghana", status: "upcoming", description: "Medical outreach for 500+ residents.", imageUrl: "https://picsum.photos/seed/volta/600/400" },
-          { title: "Health Tech Symposium", slug: "tech-2024", date: "2024-05-10", location: "Nairobi, Kenya", status: "past", description: "Discussing the future of African health.", imageUrl: "https://picsum.photos/seed/tech/600/400" }
+          { title: "Rural Outreach: Volta Region", slug: "volta-2024", date: "2024-10-20", location: "Volta, Ghana", status: "upcoming", description: "Medical outreach for 500+ residents.", imageUrl: "https://picsum.photos/seed/volta/600/400" }
         ];
       case 'teamMembers':
         return [
@@ -116,27 +112,27 @@ export default function AdminDashboard() {
       case 'impactStats':
         return [
           { label: "Lives Impacted", value: "15,000+", icon: "Heart" },
-          { label: "Clinical Hubs", value: "45+", icon: "Hospital" },
-          { label: "Countries Active", value: "12", icon: "Globe" },
-          { label: "Medical Volunteers", value: "500+", icon: "Users" }
+          { label: "Clinical Hubs", value: "45+", icon: "Hospital" }
         ];
       case 'gallery':
         return [
           { title: "Medical Mission Accra", category: "Events", imageUrl: "https://picsum.photos/seed/mission1/800/600" },
-          { title: "Clinical Hub Launch", category: "Outreach", imageUrl: "https://picsum.photos/seed/launch/800/600" },
-          { title: "Team in the Field", category: "Behind the Scenes", imageUrl: "https://picsum.photos/seed/field/800/600" }
+          { title: "Clinical Hub Launch", category: "Outreach", imageUrl: "https://picsum.photos/seed/launch/800/600" }
         ];
       case 'faqs':
         return [
-          { question: "How can I volunteer?", answer: "Apply via our Get Involved page.", category: "Volunteering", order: 1 },
-          { question: "Where do donations go?", answer: "100% of public donations fund projects directly.", category: "General", order: 2 }
+          { question: "How can I volunteer?", answer: "Apply via our Get Involved page.", category: "Volunteering", order: 1 }
+        ];
+      case 'publications':
+        return [
+          { title: "Health Equity Report 2023", category: "Research", description: "Insights into rural health delivery.", publishedAt: "2023-11-01", fileUrl: "#" }
         ];
       default:
         return [];
     }
   };
 
-  async function withTimeout<T>(promise: Promise<T>, timeoutMs: number = 15000): Promise<T> {
+  async function withTimeout<T>(promise: Promise<T>, timeoutMs: number = 10000): Promise<T> {
     const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error("TIMEOUT")), timeoutMs));
     return Promise.race([promise, timeout]);
   }
@@ -171,7 +167,7 @@ export default function AdminDashboard() {
     
     const collectionsToSeed = [
       'initiatives', 'news', 'impactStories', 'partners', 
-      'events', 'teamMembers', 'impactStats', 'gallery', 'faqs'
+      'events', 'teamMembers', 'impactStats', 'gallery', 'faqs', 'publications'
     ];
     
     const results = { seeded: [] as string[], skipped: [] as string[], failed: [] as string[] };
@@ -194,7 +190,7 @@ export default function AdminDashboard() {
       toast({ 
         variant: "destructive",
         title: err.message === "TIMEOUT" ? "Seeding Timeout" : "Seeding Failed", 
-        description: "Operation took too long or encountered an error. Check console." 
+        description: "Operation took too long or encountered a security restriction. Check Firestore rules." 
       });
     } finally {
       setIsSeeding(false);
@@ -208,7 +204,7 @@ export default function AdminDashboard() {
       const res = await seedCollection(activeTab);
       if (res.status === 'seeded') toast({ title: "Success", description: `Added ${res.count} items to ${activeTab}` });
       else if (res.status === 'skipped') toast({ title: "Already Populated", description: `${activeTab} already has data.` });
-      else toast({ variant: "destructive", title: "Failed", description: `Could not add data to ${activeTab}` });
+      else toast({ variant: "destructive", title: "Failed", description: `Could not add data to ${activeTab}. Ensure Firestore rules allow writes.` });
     } finally {
       setIsAdding(false);
     }
@@ -252,6 +248,7 @@ export default function AdminDashboard() {
           <TabsTrigger value="gallery" className="gap-2"><ImageIcon className="w-4 h-4" /> Gallery</TabsTrigger>
           <TabsTrigger value="faqs" className="gap-2"><HelpCircle className="w-4 h-4" /> FAQs</TabsTrigger>
           <TabsTrigger value="impactStats" className="gap-2"><TrendingUp className="w-4 h-4" /> Stats</TabsTrigger>
+          <TabsTrigger value="publications" className="gap-2"><BookOpen className="w-4 h-4" /> Publications</TabsTrigger>
           <TabsTrigger value="donations" className="gap-2"><DollarSign className="w-4 h-4" /> Donations</TabsTrigger>
         </TabsList>
 
@@ -326,6 +323,78 @@ export default function AdminDashboard() {
                 <TableCell className="font-bold">{item.name}</TableCell>
                 <TableCell><Badge variant="outline">{item.partnerType}</Badge></TableCell>
                 <TableCell className="text-primary underline text-xs">{item.website}</TableCell>
+              </TableRow>
+            )}
+          />
+        </TabsContent>
+
+        <TabsContent value="teamMembers">
+          <CollectionTable 
+            data={team} 
+            loading={loadingTeam}
+            columns={['Name', 'Role', 'Order']}
+            renderRow={(item: any) => (
+              <TableRow key={item.id}>
+                <TableCell className="font-bold">{item.name}</TableCell>
+                <TableCell>{item.role}</TableCell>
+                <TableCell>{item.order}</TableCell>
+              </TableRow>
+            )}
+          />
+        </TabsContent>
+
+        <TabsContent value="gallery">
+          <CollectionTable 
+            data={gallery} 
+            loading={loadingGallery}
+            columns={['Title', 'Category']}
+            renderRow={(item: any) => (
+              <TableRow key={item.id}>
+                <TableCell className="font-bold">{item.title}</TableCell>
+                <TableCell><Badge>{item.category}</Badge></TableCell>
+              </TableRow>
+            )}
+          />
+        </TabsContent>
+
+        <TabsContent value="faqs">
+          <CollectionTable 
+            data={faqs} 
+            loading={loadingFaqs}
+            columns={['Question', 'Category']}
+            renderRow={(item: any) => (
+              <TableRow key={item.id}>
+                <TableCell className="font-bold">{item.question}</TableCell>
+                <TableCell><Badge variant="outline">{item.category}</Badge></TableCell>
+              </TableRow>
+            )}
+          />
+        </TabsContent>
+
+        <TabsContent value="impactStats">
+          <CollectionTable 
+            data={stats} 
+            loading={loadingStats}
+            columns={['Label', 'Value']}
+            renderRow={(item: any) => (
+              <TableRow key={item.id}>
+                <TableCell className="font-bold">{item.label}</TableCell>
+                <TableCell className="text-primary font-bold">{item.value}</TableCell>
+              </TableRow>
+            )}
+          />
+        </TabsContent>
+
+        <TabsContent value="publications">
+          <CollectionTable 
+            data={publications} 
+            loading={loadingPublications}
+            columns={['Title', 'Category', 'Date']}
+            renderRow={(item: any) => (
+              <TableRow key={item.id}>
+                <TableCell className="font-bold">{item.title}</TableCell>
+                <TableCell><Badge variant="secondary">{item.category}</Badge></TableCell>
+                <TableCell className="font-mono text-xs">{item.publishedAt}</TableCell>
               </TableRow>
             )}
           />

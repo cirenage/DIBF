@@ -1,0 +1,41 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // CMS Content Collections: Publicly readable, writable by admin client (for seeding/management)
+    match /initiatives/{id} {
+      allow read, write: if true;
+    }
+    match /news/{id} {
+      allow read, write: if true;
+    }
+    match /impactStories/{id} {
+      allow read, write: if true;
+    }
+    match /partners/{id} {
+      allow read, write: if true;
+    }
+    match /events/{id} {
+      allow read, write: if true;
+    }
+    match /teamMembers/{id} {
+      allow read, write: if true;
+    }
+    match /publications/{id} {
+      allow read, write: if true;
+    }
+    match /gallery/{id} {
+      allow read, write: if true;
+    }
+    match /faqs/{id} {
+      allow read, write: if true;
+    }
+    match /impactStats/{id} {
+      allow read, write: if true;
+    }
+
+    // Restricted Collections: Never accessible to the public web client
+    match /donations/{id} {
+      allow read, write: if false;
+    }
+  }
+}
