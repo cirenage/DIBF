@@ -1,4 +1,3 @@
-
 "use client";
 
 import './globals.css';
@@ -26,7 +25,7 @@ export default function RootLayout({
         <title>Doctors in Business Foundation | DIBF</title>
         <meta name="description" content="Advancing Health, Human Dignity, and Sustainable Development Across Africa and the Global Community." />
       </head>
-      <body className="font-body antialiased selection:bg-primary/20">
+      <body className="font-body antialiased text-foreground selection:bg-primary/20">
         <FirebaseClientProvider>
           <Navbar />
           <AnimatePresence mode="wait">
