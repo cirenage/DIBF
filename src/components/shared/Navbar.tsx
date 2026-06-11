@@ -1,13 +1,15 @@
-"use client";
+
+'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, Heart } from 'lucide-react';
+import { Menu, X, Heart, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { motion } from 'framer-motion';
+import { CartDrawer } from '@/components/store/CartDrawer';
+import { useCart } from '@/hooks/use-cart';
 
 const NAV_LINKS = [
   { href: '/', label: 'Home' },
@@ -24,6 +26,7 @@ const NAV_LINKS = [
 export function Navbar() {
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = React.useState(false);
+  const cartCount = useCart((state) => state.totalItems());
 
   React.useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -37,7 +40,7 @@ export function Navbar() {
       isScrolled ? 'bg-white shadow-md py-2' : 'bg-white py-4'
     )}>
       <div className="container mx-auto px-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-3 group">
+        <Link href="/" className="flex items-center gap-3 group shrink-0">
           <div className="bg-primary p-2 rounded-lg text-white font-bold text-xl transition-transform group-hover:scale-105">
             DIBF
           </div>
@@ -64,22 +67,44 @@ export function Navbar() {
               </Link>
             );
           })}
-          <Button asChild className="ml-4 gap-2 px-6 font-bold">
-            <Link href="/give">
-              <Heart className="w-4 h-4 fill-current" />
-              Donate
-            </Link>
-          </Button>
+          
+          <div className="flex items-center gap-4 ml-4">
+            <CartDrawer>
+              <Button variant="ghost" size="icon" className="relative h-10 w-10">
+                <ShoppingCart className="w-5 h-5 text-secondary" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-accent text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-md animate-in zoom-in-50">
+                    {cartCount}
+                  </span>
+                )}
+              </Button>
+            </CartDrawer>
+            
+            <Button asChild className="gap-2 px-6 font-bold shadow-md">
+              <Link href="/give">
+                <Heart className="w-4 h-4 fill-current" />
+                Donate
+              </Link>
+            </Button>
+          </div>
         </nav>
 
         {/* Mobile Nav */}
         <div className="xl:hidden flex items-center gap-3">
-          <Button asChild size="sm" className="gap-2 font-bold">
-            <Link href="/give">Donate</Link>
-          </Button>
+          <CartDrawer>
+            <Button variant="ghost" size="icon" className="relative h-9 w-9">
+              <ShoppingCart className="w-4 h-4" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-accent text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-sm">
+                  {cartCount}
+                </span>
+              )}
+            </Button>
+          </CartDrawer>
+
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="h-9 w-9">
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
@@ -100,6 +125,12 @@ export function Navbar() {
                     {link.label}
                   </Link>
                 ))}
+                <Button asChild className="mt-6 gap-2 h-14 font-bold">
+                  <Link href="/give">
+                    <Heart className="w-4 h-4 fill-current" />
+                    Make a Donation
+                  </Link>
+                </Button>
               </nav>
             </SheetContent>
           </Sheet>

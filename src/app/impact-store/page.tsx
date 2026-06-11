@@ -1,5 +1,5 @@
 
-"use client";
+'use client';
 
 import * as React from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
@@ -8,22 +8,37 @@ import { SectionHeader } from '@/components/shared/SectionHeader';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingBag, Heart, Info, ArrowRight, Sparkles, BrainCircuit, Shirt, ShoppingCart } from 'lucide-react';
+import { ShoppingBag, Heart, Info, ArrowRight, Sparkles, BrainCircuit, Shirt, ShoppingCart, Filter, Search } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ScrollReveal, RevealItem } from '@/components/shared/ScrollReveal';
+import { useCart } from '@/hooks/use-cart';
+import { Input } from '@/components/ui/input';
 
 export default function ImpactStorePage() {
   const db = useFirestore();
+  const addItem = useCart((state) => state.addItem);
+  
   const storeQuery = useMemoFirebase(() => db ? query(collection(db, 'impactStore'), orderBy('order', 'asc')) : null, [db]);
   const { data: items, loading } = useCollection(storeQuery);
 
+  const [activeCategory, setActiveCategory] = React.useState('All');
+  const [searchQuery, setSearchQuery] = React.useState('');
+
   const categories = [
+    { name: "All", icon: Filter },
     { name: "Mental health awareness merchandise", icon: BrainCircuit },
     { name: "Apparel and accessories", icon: Shirt },
     { name: "Office and lifestyle items", icon: ShoppingBag },
     { name: "Wellness and fitness products", icon: Heart },
   ];
+
+  const filteredItems = items.filter(item => {
+    const matchesCategory = activeCategory === 'All' || item.category === activeCategory;
+    const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          item.description.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   const impactAreas = [
     "Health and community wellbeing",
@@ -55,7 +70,7 @@ export default function ImpactStorePage() {
             </p>
           </RevealItem>
           <div className="flex justify-center gap-4">
-            <Button asChild size="lg" className="h-14 px-8 font-bold gap-2">
+            <Button asChild size="lg" className="h-14 px-8 font-bold gap-2 shadow-2xl shadow-primary/30">
               <Link href="#products">Explore Products <ArrowRight className="w-4 h-4" /></Link>
             </Button>
           </div>
@@ -64,43 +79,53 @@ export default function ImpactStorePage() {
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent/5 blur-3xl rounded-full" />
       </section>
 
-      {/* Philosophy Section */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4 text-center max-w-3xl">
-          <SectionHeader 
-            title="A Culture of Shared Responsibility" 
-            subtitle="The DIBF Impact Store represents a culture of purpose, where products become conversation starters, symbols of advocacy, and tools for positive change."
-          />
+      {/* Product Filters & Search */}
+      <section id="products" className="py-12 bg-white border-b sticky top-[72px] md:top-[80px] z-40 shadow-sm">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col lg:flex-row gap-6 justify-between items-center">
+            <div className="flex flex-wrap justify-center lg:justify-start gap-2">
+              {categories.map((cat, i) => (
+                <Button
+                  key={i}
+                  variant={activeCategory === cat.name ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setActiveCategory(cat.name)}
+                  className="rounded-full gap-2 text-xs h-9 px-4"
+                >
+                  <cat.icon className="w-3.5 h-3.5" />
+                  {cat.name === "All" ? "All Collections" : cat.name.split(' ')[0]}
+                </Button>
+              ))}
+            </div>
+            <div className="relative w-full lg:max-w-xs">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search products..." 
+                className="pl-10 rounded-full h-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Product Grid */}
-      <section id="products" className="py-20 bg-muted/30">
+      <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
-            <h2 className="text-3xl font-bold text-secondary">Featured Collections</h2>
-            <div className="flex flex-wrap justify-center gap-3">
-              {categories.map((cat, i) => (
-                <Badge key={i} variant="outline" className="px-4 py-2 border-primary/20 bg-white hover:bg-primary hover:text-white transition-colors cursor-pointer gap-2">
-                  <cat.icon className="w-3.5 h-3.5" />
-                  {cat.name.split(' ')[0]}
-                </Badge>
-              ))}
-            </div>
-          </div>
-
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-              {[1, 2, 3, 4].map(i => <div key={i} className="h-96 bg-white/50 animate-pulse rounded-2xl" />)}
+              {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <div key={i} className="h-96 bg-white/50 animate-pulse rounded-2xl" />)}
             </div>
-          ) : items.length === 0 ? (
+          ) : filteredItems.length === 0 ? (
             <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-muted">
               <ShoppingCart className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
-              <p className="text-muted-foreground font-medium">New impact collections arriving soon.</p>
+              <p className="text-muted-foreground font-medium">No products found in this collection.</p>
+              <Button variant="link" onClick={() => {setActiveCategory('All'); setSearchQuery('');}}>Clear Filters</Button>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-              {items.map((item, idx) => (
+              {filteredItems.map((item, idx) => (
                 <RevealItem key={item.id || idx}>
                   <Card className="group h-full flex flex-col border-none shadow-lg hover:shadow-2xl transition-all duration-500 rounded-2xl overflow-hidden bg-white">
                     <div className="relative h-64 overflow-hidden">
@@ -112,31 +137,40 @@ export default function ImpactStorePage() {
                         data-ai-hint="impact merchandise"
                       />
                       <div className="absolute top-4 left-4">
-                        <Badge className="bg-primary/90 text-white backdrop-blur-sm">{item.category}</Badge>
+                        <Badge className="bg-primary/90 text-white backdrop-blur-sm shadow-sm">{item.category}</Badge>
                       </div>
                     </div>
                     <CardHeader className="p-6 pb-2">
                       <div className="flex justify-between items-start gap-2">
-                        <CardTitle className="text-xl font-bold text-secondary line-clamp-1">{item.title}</CardTitle>
-                        <span className="font-bold text-primary">{item.price}</span>
+                        <CardTitle className="text-lg font-bold text-secondary line-clamp-1 group-hover:text-primary transition-colors">{item.title}</CardTitle>
+                        <span className="font-bold text-primary shrink-0">{item.price}</span>
                       </div>
                     </CardHeader>
                     <CardContent className="p-6 pt-0 flex-1 space-y-4">
-                      <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                      <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed h-10">
                         {item.description}
                       </p>
                       <div className="bg-accent/5 p-3 rounded-xl flex gap-3 items-start border border-accent/10">
                         <Sparkles className="w-4 h-4 text-accent shrink-0 mt-0.5" />
-                        <p className="text-[11px] font-bold text-accent-foreground leading-tight uppercase tracking-wider">
+                        <div className="text-[11px] font-bold text-accent-foreground leading-tight uppercase tracking-wider">
                           <span className="opacity-60 block mb-0.5">Impact Note:</span>
                           {item.impactNote}
-                        </p>
+                        </div>
                       </div>
                     </CardContent>
                     <CardFooter className="p-6 pt-0">
-                      <Button className="w-full gap-2 font-bold shadow-md">
+                      <Button 
+                        onClick={() => addItem({
+                          id: item.id,
+                          title: item.title,
+                          price: item.price,
+                          imageUrl: item.imageUrl,
+                          quantity: 1
+                        })}
+                        className="w-full gap-2 font-bold shadow-md hover:scale-[1.02] active:scale-95 transition-all"
+                      >
                         <ShoppingBag className="w-4 h-4" />
-                        Purchase with Purpose
+                        Add to Cart
                       </Button>
                     </CardFooter>
                   </Card>
@@ -174,7 +208,7 @@ export default function ImpactStorePage() {
               <h3 className="text-3xl font-bold font-headline">Together, we can transform everyday purchases into lasting impact.</h3>
               <p className="text-white/60">All proceeds from the Impact Store are strictly audited and funneled directly into DIBF Outreach Programs.</p>
               <Button asChild size="lg" variant="outline" className="border-white text-white hover:bg-white/10 h-14 px-10 font-bold">
-                <Link href="/contact">Bulk Orders & Corporate Gifting</Link>
+                <Link href="/contact?type=bulk-order">Bulk Orders & Corporate Gifting</Link>
               </Button>
             </div>
           </div>

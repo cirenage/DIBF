@@ -7,28 +7,36 @@ import { collection, doc, setDoc, addDoc, serverTimestamp, getDocs, query, limit
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Sparkles, Database, FileText, CheckCircle2, AlertCircle, ShoppingCart } from 'lucide-react';
+import { Loader2, Sparkles, Database, FileText, CheckCircle2, AlertCircle, ShoppingCart, Users, Heart, Globe, Newspaper, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import Image from 'next/image';
 
 export default function AdminHub() {
   const db = useFirestore();
   const { toast } = useToast();
   const [isSeeding, setIsSeeding] = React.useState(false);
 
-  // Collections to monitor
+  // Memoized collection references
   const initsRef = useMemoFirebase(() => db ? collection(db, 'initiatives') : null, [db]);
   const storeRef = useMemoFirebase(() => db ? collection(db, 'impactStore') : null, [db]);
-  const donationsRef = useMemoFirebase(() => db ? collection(db, 'donations') : null, [db]);
+  const newsRef = useMemoFirebase(() => db ? collection(db, 'news') : null, [db]);
+  const eventsRef = useMemoFirebase(() => db ? collection(db, 'events') : null, [db]);
+  const teamRef = useMemoFirebase(() => db ? collection(db, 'team') : null, [db]);
 
   const { data: initiatives } = useCollection(initsRef);
   const { data: storeItems } = useCollection(storeRef);
-  const { data: donations } = useCollection(donationsRef);
+  const { data: newsPosts } = useCollection(newsRef);
+  const { data: events } = useCollection(eventsRef);
 
   const seedWebsiteData = async () => {
     if (!db) return;
     setIsSeeding(true);
 
-    try {
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error("Operation timed out (15s)")), 15000)
+    );
+
+    const seedingTask = async () => {
       // 1. Site Settings
       await setDoc(doc(db, 'siteSettings', 'main'), {
         name: "Doctors in Business Foundation | DIBF",
@@ -39,7 +47,7 @@ export default function AdminHub() {
         officeHours: "Monday – Friday: 9:00 AM – 5:00 PM (GMT)"
       });
 
-      // 2. Impact Store Seeding (Idempotent)
+      // 2. Impact Store Seeding (Comprehensive)
       const storeItemsData = [
         {
           title: "Awareness Hoodie",
@@ -76,6 +84,24 @@ export default function AdminHub() {
           imageUrl: "https://images.unsplash.com/photo-1602143307185-84487493375e?q=80&w=800&auto=format&fit=crop",
           impactNote: "Supports Clean Water Initiatives",
           order: 4
+        },
+        {
+          title: "Unity Campaign Wristband",
+          description: "Symbol of collective generosity and healthcare support.",
+          price: "$5.00",
+          category: "Awareness campaigns and themed collections",
+          imageUrl: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?q=80&w=800&auto=format&fit=crop",
+          impactNote: "Supports the Dollar-A-Day Campaign",
+          order: 5
+        },
+        {
+          title: "Traditional Artisan Basket",
+          description: "Hand-woven by community partners, showcasing local talent and craftsmanship.",
+          price: "$55.00",
+          category: "Creative and artistic pieces",
+          imageUrl: "https://images.unsplash.com/photo-1596464716127-f2a82984de30?q=80&w=800&auto=format&fit=crop",
+          impactNote: "Directly Empowers Local Artisans",
+          order: 6
         }
       ];
 
@@ -119,9 +145,20 @@ export default function AdminHub() {
         }
       }
 
-      toast({ title: "Success", description: "All foundation website data has been seeded." });
+      return "Data seeded successfully";
+    };
+
+    try {
+      await Promise.race([seedingTask(), timeoutPromise]);
+      toast({ title: "Success", description: "Website dynamic data has been seeded." });
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Error", description: e.message });
+      toast({ 
+        variant: "destructive", 
+        title: "Seeding Error", 
+        description: e.code === 'permission-denied' 
+          ? "Permission Denied. Check Firestore rules." 
+          : (e.message || "Unknown error occurred.")
+      });
     } finally {
       setIsSeeding(false);
     }
@@ -139,7 +176,7 @@ export default function AdminHub() {
         </div>
         <Button onClick={seedWebsiteData} disabled={isSeeding} className="gap-2 font-bold shadow-lg h-14 px-8">
           {isSeeding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-          Seed Website Data
+          Seed All Website Data
         </Button>
       </div>
 
@@ -152,23 +189,37 @@ export default function AdminHub() {
         </TabsList>
 
         <TabsContent value="overview">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <Card className="border-none shadow-md">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Active Initiatives</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <Globe className="w-4 h-4" /> Initiatives
+                </CardTitle>
                 <div className="text-2xl font-bold text-secondary">{initiatives.length}</div>
               </CardHeader>
             </Card>
             <Card className="border-none shadow-md">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Store Products</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <ShoppingCart className="w-4 h-4" /> Store Products
+                </CardTitle>
                 <div className="text-2xl font-bold text-secondary">{storeItems.length}</div>
               </CardHeader>
             </Card>
             <Card className="border-none shadow-md">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Recent Donations</CardTitle>
-                <div className="text-2xl font-bold text-secondary">{donations.length}</div>
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <Newspaper className="w-4 h-4" /> News
+                </CardTitle>
+                <div className="text-2xl font-bold text-secondary">{newsPosts.length}</div>
+              </CardHeader>
+            </Card>
+            <Card className="border-none shadow-md">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <Calendar className="w-4 h-4" /> Events
+                </CardTitle>
+                <div className="text-2xl font-bold text-secondary">{events.length}</div>
               </CardHeader>
             </Card>
           </div>
@@ -176,26 +227,32 @@ export default function AdminHub() {
 
         <TabsContent value="store">
           <Card className="border-none shadow-lg">
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between border-b pb-6">
               <div>
-                <CardTitle>Impact Store Management</CardTitle>
-                <CardDescription>View and manage products that fund our missions.</CardDescription>
+                <CardTitle>Impact Store Catalog</CardTitle>
+                <CardDescription>All items available for purpose-driven purchase.</CardDescription>
               </div>
-              <ShoppingCart className="w-6 h-6 text-muted-foreground" />
+              <ShoppingCart className="w-8 h-8 text-primary/20" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               {storeItems.length === 0 ? (
                 <div className="text-center py-20 italic text-muted-foreground">No products found. Seed data to begin.</div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {storeItems.map((item: any) => (
-                    <div key={item.id} className="flex gap-4 p-4 border rounded-xl items-center bg-muted/30">
-                      <div className="w-16 h-16 relative rounded-lg overflow-hidden shrink-0">
-                        <Image src={item.imageUrl} alt={item.title} fill className="object-cover" />
+                    <div key={item.id} className="flex flex-col p-4 border rounded-xl bg-muted/20 group hover:border-primary/50 transition-colors">
+                      <div className="w-full h-40 relative rounded-lg overflow-hidden mb-4 border">
+                        <Image src={item.imageUrl} alt={item.title} fill className="object-cover group-hover:scale-105 transition-transform" />
                       </div>
-                      <div className="flex-1">
-                        <h4 className="font-bold text-secondary">{item.title}</h4>
-                        <p className="text-xs text-muted-foreground">{item.category} • {item.price}</p>
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-bold text-secondary leading-tight">{item.title}</h4>
+                        <span className="text-primary font-bold">{item.price}</span>
+                      </div>
+                      <Badge variant="outline" className="w-fit text-[10px] mb-3">{item.category}</Badge>
+                      <p className="text-xs text-muted-foreground line-clamp-2 mb-4">{item.description}</p>
+                      <div className="mt-auto pt-3 border-t flex items-center gap-2">
+                        <Heart className="w-3 h-3 text-accent" />
+                        <span className="text-[10px] font-bold text-accent uppercase tracking-tighter">Impact: {item.impactNote}</span>
                       </div>
                     </div>
                   ))}
@@ -206,17 +263,30 @@ export default function AdminHub() {
         </TabsContent>
 
         <TabsContent value="submissions">
-          <Card className="border-none shadow-lg">
-            <CardHeader>
-              <CardTitle>Inquiry Submissions</CardTitle>
-              <CardDescription>View messages, volunteer requests, and partnership inquiries.</CardDescription>
-            </CardHeader>
-            <CardContent>
-               <div className="text-center py-12 text-muted-foreground italic">
-                 Donations and inquiry collections are actively monitored here.
-               </div>
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card className="border-none shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-lg">Recent Inquiries</CardTitle>
+                <CardDescription>Contact messages and site feedback.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-12 text-muted-foreground italic border-2 border-dashed rounded-xl">
+                  Inquiry logs are protected for privacy.
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-none shadow-lg text-white bg-primary">
+              <CardHeader>
+                <CardTitle className="text-lg">Donation Intents</CardTitle>
+                <CardDescription className="text-white/70">Recorded pledges and store checkout intents.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-12 italic border-2 border-dashed border-white/20 rounded-xl">
+                  Secure transaction logs are managed here.
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
