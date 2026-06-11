@@ -1,198 +1,101 @@
 {
   "entities": {
-    "Initiative": {
-      "title": "Initiative",
-      "description": "A flagship program or project of the foundation.",
-      "type": "object",
-      "properties": {
-        "title": { "type": "string" },
-        "slug": { "type": "string" },
-        "summary": { "type": "string" },
-        "description": { "type": "string" },
-        "category": { "type": "string" },
-        "location": { "type": "string" },
-        "imageUrl": { "type": "string" },
-        "status": { "type": "string", "enum": ["active", "completed", "planned"] },
-        "featured": { "type": "boolean" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["title", "slug", "description", "category"]
-    },
-    "NewsPost": {
-      "title": "News Post",
-      "description": "Updates, insights, and blog posts.",
-      "type": "object",
-      "properties": {
-        "title": { "type": "string" },
-        "slug": { "type": "string" },
-        "excerpt": { "type": "string" },
-        "content": { "type": "string" },
-        "category": { "type": "string" },
-        "author": { "type": "string" },
-        "imageUrl": { "type": "string" },
-        "publishedAt": { "type": "string", "format": "date-time" },
-        "featured": { "type": "boolean" }
-      },
-      "required": ["title", "slug", "content"]
-    },
-    "ImpactStory": {
-      "title": "Impact Story",
-      "description": "Personal narratives of community impact.",
-      "type": "object",
-      "properties": {
-        "title": { "type": "string" },
-        "slug": { "type": "string" },
-        "beneficiary": { "type": "string" },
-        "location": { "type": "string" },
-        "summary": { "type": "string" },
-        "story": { "type": "string" },
-        "imageUrl": { "type": "string" },
-        "impactMetric": { "type": "string" },
-        "featured": { "type": "boolean" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["beneficiary", "story"]
-    },
-    "Partner": {
-      "title": "Partner",
-      "description": "Collaborating institutions and organizations.",
+    "SiteSettings": {
+      "title": "Site Settings",
+      "description": "General configuration for the foundation website.",
       "type": "object",
       "properties": {
         "name": { "type": "string" },
-        "type": { "type": "string", "enum": ["University", "Corporate", "Foundation", "NGO"] },
-        "description": { "type": "string" },
-        "logoUrl": { "type": "string" },
-        "website": { "type": "string" },
-        "featured": { "type": "boolean" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["name", "type"]
+        "tagline": { "type": "string" },
+        "contactEmail": { "type": "string" },
+        "contactPhone": { "type": "string" },
+        "address": { "type": "string" },
+        "officeHours": { "type": "string" }
+      }
     },
-    "Event": {
-      "title": "Event",
-      "description": "Foundation events and outreaches.",
+    "HeroSection": {
+      "title": "Hero Section",
+      "description": "Hero content for a specific page.",
+      "type": "object",
+      "properties": {
+        "eyebrow": { "type": "string" },
+        "heading": { "type": "string" },
+        "body": { "type": "string" },
+        "primaryCTA": { "type": "string" },
+        "primaryLink": { "type": "string" },
+        "secondaryCTA": { "type": "string" },
+        "secondaryLink": { "type": "string" },
+        "imageUrl": { "type": "string" }
+      }
+    },
+    "Initiative": {
+      "title": "Initiative",
+      "description": "A flagship program of the foundation.",
       "type": "object",
       "properties": {
         "title": { "type": "string" },
         "slug": { "type": "string" },
         "description": { "type": "string" },
-        "location": { "type": "string" },
-        "eventDate": { "type": "string", "format": "date" },
+        "summary": { "type": "string" },
+        "category": { "type": "string" },
         "imageUrl": { "type": "string" },
-        "status": { "type": "string", "enum": ["upcoming", "past", "cancelled"] },
-        "registrationUrl": { "type": "string" },
+        "bullets": { "type": "array", "items": { "type": "string" } },
         "featured": { "type": "boolean" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["title", "eventDate", "location"]
+        "order": { "type": "number" }
+      }
+    },
+    "ImpactStory": {
+      "title": "Impact Story",
+      "description": "Narratives of change from the field.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "body": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "featured": { "type": "boolean" }
+      }
     },
     "TeamMember": {
       "title": "Team Member",
-      "description": "Foundation leadership and staff.",
+      "description": "Leadership and staff details.",
       "type": "object",
       "properties": {
         "name": { "type": "string" },
         "role": { "type": "string" },
         "bio": { "type": "string" },
         "imageUrl": { "type": "string" },
-        "order": { "type": "number" },
-        "featured": { "type": "boolean" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["name", "role"]
-    },
-    "Publication": {
-      "title": "Publication",
-      "description": "Reports, research papers, and documents.",
-      "type": "object",
-      "properties": {
-        "title": { "type": "string" },
-        "slug": { "type": "string" },
-        "summary": { "type": "string" },
-        "fileUrl": { "type": "string" },
-        "coverImageUrl": { "type": "string" },
-        "category": { "type": "string" },
-        "publishedAt": { "type": "string", "format": "date" },
-        "featured": { "type": "boolean" }
-      },
-      "required": ["title", "category"]
+        "order": { "type": "number" }
+      }
     },
     "Donation": {
       "title": "Donation",
-      "description": "Restricted donation records.",
-      "type": "object",
-      "properties": {
-        "donorName": { "type": "string" },
-        "donorEmail": { "type": "string" },
-        "amount": { "type": "number" },
-        "currency": { "type": "string" },
-        "purpose": { "type": "string" },
-        "status": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["donorName", "amount"]
-    },
-    "ContactMessage": {
-      "title": "Contact Message",
-      "description": "Messages from the contact form.",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "email": { "type": "string" },
-        "subject": { "type": "string" },
-        "message": { "type": "string" },
-        "status": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["name", "email", "message"]
-    },
-    "VolunteerRequest": {
-      "title": "Volunteer Request",
-      "description": "Applications to volunteer.",
+      "description": "Records of donation intent.",
       "type": "object",
       "properties": {
         "fullName": { "type": "string" },
         "email": { "type": "string" },
         "phone": { "type": "string" },
-        "areaOfInterest": { "type": "string" },
+        "donationType": { "type": "string" },
+        "initiative": { "type": "string" },
+        "amount": { "type": "number" },
         "message": { "type": "string" },
-        "status": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["fullName", "email"]
-    },
-    "PartnershipRequest": {
-      "title": "Partnership Request",
-      "description": "Requests for organizational partnership.",
-      "type": "object",
-      "properties": {
-        "organizationName": { "type": "string" },
-        "contactPerson": { "type": "string" },
-        "email": { "type": "string" },
-        "phone": { "type": "string" },
-        "partnershipType": { "type": "string" },
-        "message": { "type": "string" },
-        "status": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["organizationName", "email"]
+      }
     }
   },
   "auth": {
     "providers": ["google.com"]
   },
   "firestore": {
-    "/initiatives/{id}": { "schema": "Initiative", "description": "Foundation initiatives" },
-    "/news/{id}": { "schema": "NewsPost", "description": "News and updates" },
-    "/impactStories/{id}": { "schema": "ImpactStory", "description": "Personal narratives" },
-    "/partners/{id}": { "schema": "Partner", "description": "Partner organizations" },
-    "/events/{id}": { "schema": "Event", "description": "Outreaches and events" },
+    "/siteSettings/main": { "schema": "SiteSettings", "description": "Global site configuration" },
+    "/heroSections/{pageSlug}": { "schema": "HeroSection", "description": "Page-specific hero content" },
+    "/initiatives/{id}": { "schema": "Initiative", "description": "Foundation programs" },
+    "/impactStories/{id}": { "schema": "ImpactStory", "description": "Success stories" },
     "/teamMembers/{id}": { "schema": "TeamMember", "description": "Staff and leadership" },
-    "/publications/{id}": { "schema": "Publication", "description": "Reports and research" },
-    "/donations/{id}": { "schema": "Donation", "description": "Restricted donation records" },
-    "/contactMessages/{id}": { "schema": "ContactMessage", "description": "Contact form submissions" },
-    "/volunteerRequests/{id}": { "schema": "VolunteerRequest", "description": "Volunteer applications" },
-    "/partnershipRequests/{id}": { "schema": "PartnershipRequest", "description": "Partnership inquiries" }
-  },
-  "_version": "1.0.2"
+    "/donations/{id}": { "schema": "Donation", "description": "Donation intent records" },
+    "/contactMessages/{id}": { "schema": "object", "description": "Contact form submissions" },
+    "/volunteerRequests/{id}": { "schema": "object", "description": "Volunteer applications" },
+    "/partnershipRequests/{id}": { "schema": "object", "description": "Partnership inquiries" }
+  }
 }

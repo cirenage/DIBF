@@ -1,22 +1,23 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Blanket permissions for development to resolve path-specific denials
-    match /initiatives/{id} { allow read, write: if true; }
-    match /news/{id} { allow read, write: if true; }
-    match /impactStories/{id} { allow read, write: if true; }
-    match /partners/{id} { allow read, write: if true; }
-    match /events/{id} { allow read, write: if true; }
-    match /teamMembers/{id} { allow read, write: if true; }
-    match /publications/{id} { allow read, write: if true; }
-    match /donations/{id} { allow read, write: if true; }
-    match /contactMessages/{id} { allow read, write: if true; }
-    match /volunteerRequests/{id} { allow read, write: if true; }
-    match /partnershipRequests/{id} { allow read, write: if true; }
+    // Read access for CMS content
+    match /siteSettings/{id} { allow read: if true; allow write: if true; }
+    match /heroSections/{id} { allow read: if true; allow write: if true; }
+    match /initiatives/{id} { allow read: if true; allow write: if true; }
+    match /impactStories/{id} { allow read: if true; allow write: if true; }
+    match /teamMembers/{id} { allow read: if true; allow write: if true; }
+    match /partners/{id} { allow read: if true; allow write: if true; }
+    match /events/{id} { allow read: if true; allow write: if true; }
+    match /news/{id} { allow read: if true; allow write: if true; }
+    match /publications/{id} { allow read: if true; allow write: if true; }
     
-    // Explicitly allow list operations for queries
-    match /{path=**}/events/{id} {
-      allow read, write: if true;
-    }
+    // Write-only access for public forms
+    match /donations/{id} { allow create: if true; allow read: if true; }
+    match /contactMessages/{id} { allow create: if true; allow read: if true; }
+    match /volunteerRequests/{id} { allow create: if true; allow read: if true; }
+    match /partnershipRequests/{id} { allow create: if true; allow read: if true; }
+    match /mediaRequests/{id} { allow create: if true; allow read: if true; }
+    match /newsletterSubscriptions/{id} { allow create: if true; allow read: if true; }
   }
 }
