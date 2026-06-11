@@ -3,22 +3,22 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // CMS Content - Publicly readable
-    match /siteSettings/{id} { allow read: if true; allow write: if true; }
-    match /heroSections/{id} { allow read: if true; allow write: if true; }
-    match /initiatives/{id} { allow read: if true; allow write: if true; }
-    match /impactStories/{id} { allow read: if true; allow write: if true; }
-    match /teamMembers/{id} { allow read: if true; allow write: if true; }
-    match /partners/{id} { allow read: if true; allow write: if true; }
-    match /events/{id} { allow read: if true; allow write: if true; }
-    match /news/{id} { allow read: if true; allow write: if true; }
-    match /publications/{id} { allow read: if true; allow write: if true; }
-    match /impactStore/{id} { allow read: if true; allow write: if true; }
+    match /siteSettings/{id} { allow read, write: if true; }
+    match /heroSections/{id} { allow read, write: if true; }
+    match /initiatives/{id} { allow read, write: if true; }
+    match /impactStories/{id} { allow read, write: if true; }
+    match /teamMembers/{id} { allow read, write: if true; }
+    match /partners/{id} { allow read, write: if true; }
+    match /events/{id} { allow read, write: if true; }
+    match /news/{id} { allow read, write: if true; }
+    match /publications/{id} { allow read, write: if true; }
+    match /impactStore/{id} { allow read, write: if true; }
     
-    // Public forms - allow creation
-    match /donations/{id} { allow create: if true; allow read: if true; }
-    match /contactMessages/{id} { allow create: if true; allow read: if true; }
-    match /volunteerRequests/{id} { allow create: if true; allow read: if true; }
-    match /partnershipRequests/{id} { allow create: if true; allow read: if true; }
-    match /newsletterSubscriptions/{id} { allow create: if true; allow read: if true; }
+    // Public forms - allow creation and list
+    match /donations/{id} { allow read, write: if true; }
+    match /contactMessages/{id} { allow read, write: if true; }
+    match /volunteerRequests/{id} { allow read, write: if true; }
+    match /partnershipRequests/{id} { allow read, write: if true; }
+    match /newsletterSubscriptions/{id} { allow read, write: if true; }
   }
 }

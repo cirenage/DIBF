@@ -1,10 +1,12 @@
 
 "use client";
 
+import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Mail, Phone, MapPin, Send, MessageCircle, Handshake, Users, Info } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { Mail, Phone, MapPin, Send, MessageCircle, Handshake, Users, Info, ShoppingCart, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -12,6 +14,11 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { useCart } from '@/hooks/use-cart';
+import { Separator } from '@/components/ui/separator';
+import Image from 'next/image';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
 
 const ContactSchema = z.object({
   name: z.string().min(2, "Full name is required"),
@@ -24,6 +31,11 @@ const ContactSchema = z.object({
 
 export default function ContactPage() {
   const { toast } = useToast();
+  const db = useFirestore();
+  const searchParams = useSearchParams();
+  const { items, clearCart, totalPrice } = useCart();
+  const isStoreInquiry = searchParams.get('type') === 'store-inquiry';
+
   const form = useForm<z.infer<typeof ContactSchema>>({
     resolver: zodResolver(ContactSchema),
     defaultValues: {
@@ -31,18 +43,30 @@ export default function ContactPage() {
       email: "",
       phone: "",
       organization: "",
-      inquiryType: "",
-      message: "",
+      inquiryType: isStoreInquiry ? "store-inquiry" : "",
+      message: isStoreInquiry 
+        ? `I am interested in inquiring about the following items from the DIBF Impact Store: \n${items.map(i => `- ${i.title} (x${i.quantity})`).join('\n')}\n\nTotal Estimated Contribution: $${totalPrice().toFixed(2)}`
+        : "",
     },
   });
 
-  function onSubmit(data: z.infer<typeof ContactSchema>) {
-    console.log(data);
-    toast({
-      title: "Message Sent!",
-      description: "We've received your inquiry and will get back to you shortly.",
-    });
-    form.reset();
+  async function onSubmit(data: z.infer<typeof ContactSchema>) {
+    if (!db) return;
+    try {
+      await addDoc(collection(db, 'contactMessages'), {
+        ...data,
+        cartItems: isStoreInquiry ? items : null,
+        createdAt: serverTimestamp(),
+      });
+      toast({
+        title: "Inquiry Sent!",
+        description: "We've received your message and will get back to you within 48 hours.",
+      });
+      if (isStoreInquiry) clearCart();
+      form.reset();
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error", description: "Failed to send message. Please try again." });
+    }
   }
 
   return (
@@ -50,74 +74,70 @@ export default function ContactPage() {
       {/* Hero */}
       <section className="bg-secondary text-white py-24 text-center">
         <div className="container mx-auto px-4 max-w-3xl space-y-6">
-          <h1 className="text-4xl md:text-5xl font-headline font-bold">Connect With Us</h1>
+          <h1 className="text-4xl md:text-5xl font-headline font-bold">
+            {isStoreInquiry ? "Impact Store Inquiry" : "Connect With Us"}
+          </h1>
           <p className="text-xl text-white/70 leading-relaxed">
-            Whether you are looking to partner, volunteer, or simply learn more about our work, 
-            our team is here to help.
+            {isStoreInquiry 
+              ? "Tell us more about your interest in our purpose-driven products. Our team will coordinate delivery and impact tracking with you."
+              : "Whether you are looking to partner, volunteer, or simply learn more about our work, our team is here to help."}
           </p>
         </div>
       </section>
 
       <div className="container mx-auto px-4 -mt-12 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Contact Info Sidebar */}
+          {/* Sidebar */}
           <div className="space-y-6">
+            {isStoreInquiry && items.length > 0 && (
+              <Card className="shadow-lg border-primary/20 overflow-hidden">
+                <CardHeader className="bg-primary text-white">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <ShoppingCart className="w-5 h-5" />
+                    Your Inquiry Cart
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-4">
+                  {items.map(item => (
+                    <div key={item.id} className="flex gap-3 text-sm">
+                      <div className="w-12 h-12 relative rounded border shrink-0">
+                        <Image src={item.imageUrl} alt={item.title} fill className="object-cover rounded" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-bold line-clamp-1">{item.title}</p>
+                        <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
+                      </div>
+                    </div>
+                  ))}
+                  <Separator />
+                  <div className="flex justify-between font-bold text-secondary">
+                    <span>Est. Total</span>
+                    <span>${totalPrice().toFixed(2)}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card className="shadow-lg border-none">
-              <CardContent className="p-8 space-y-8">
+              <CardContent className="p-8 space-y-8 text-sm">
                 <div className="flex gap-4">
-                  <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center shrink-0">
-                    <Mail className="w-5 h-5" />
+                  <div className="w-10 h-10 bg-primary/10 text-primary rounded-full flex items-center justify-center shrink-0">
+                    <Mail className="w-4 h-4" />
                   </div>
                   <div>
                     <h4 className="font-bold text-secondary">Email Support</h4>
-                    <p className="text-sm text-muted-foreground">info@dibfglobal.org</p>
-                    <p className="text-sm text-muted-foreground">partners@dibfglobal.org</p>
+                    <p className="text-muted-foreground">info@dibf.org</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
-                  <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center shrink-0">
-                    <Phone className="w-5 h-5" />
+                  <div className="w-10 h-10 bg-primary/10 text-primary rounded-full flex items-center justify-center shrink-0">
+                    <Phone className="w-4 h-4" />
                   </div>
                   <div>
                     <h4 className="font-bold text-secondary">Phone</h4>
-                    <p className="text-sm text-muted-foreground">+1 (555) 000-0000</p>
-                    <p className="text-xs text-muted-foreground italic">Mon-Fri, 9am - 5pm GMT</p>
+                    <p className="text-muted-foreground">+233 54 123 4567</p>
                   </div>
                 </div>
-                <div className="flex gap-4">
-                  <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center shrink-0">
-                    <MapPin className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-secondary">Global HQ</h4>
-                    <p className="text-sm text-muted-foreground">Strategic Hub, Accra, Ghana</p>
-                    <p className="text-sm text-muted-foreground">Support Center, Nairobi, Kenya</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-lg border-none bg-primary text-white">
-              <CardHeader>
-                <CardTitle className="font-headline font-bold">Specific Inquiries</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                 <div className="flex items-center gap-3 text-sm">
-                    <Handshake className="w-4 h-4" />
-                    <span>Corporate & University Partnerships</span>
-                 </div>
-                 <div className="flex items-center gap-3 text-sm">
-                    <Users className="w-4 h-4" />
-                    <span>Volunteer & Field Programs</span>
-                 </div>
-                 <div className="flex items-center gap-3 text-sm">
-                    <MessageCircle className="w-4 h-4" />
-                    <span>Media & Press Relations</span>
-                 </div>
-                 <div className="flex items-center gap-3 text-sm">
-                    <Info className="w-4 h-4" />
-                    <span>General Foundation Inquiries</span>
-                 </div>
               </CardContent>
             </Card>
           </div>
@@ -126,111 +146,43 @@ export default function ContactPage() {
           <Card className="lg:col-span-2 shadow-xl border-none">
             <CardHeader className="p-8 pb-0">
               <CardTitle className="text-2xl font-headline font-bold text-secondary">Send a Message</CardTitle>
-              <CardDescription>Fill out the form below and a member of our team will respond within 48 hours.</CardDescription>
+              <CardDescription>We typically respond within 48 hours to all inquiries.</CardDescription>
             </CardHeader>
             <CardContent className="p-8">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Full Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="John Doe" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email Address</FormLabel>
-                          <FormControl>
-                            <Input placeholder="john@example.com" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <FormField control={form.control} name="name" render={({ field }) => (
+                      <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input placeholder="John Doe" {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <FormField control={form.control} name="email" render={({ field }) => (
+                      <FormItem><FormLabel>Email Address</FormLabel><FormControl><Input placeholder="john@example.com" {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
                   </div>
                   
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Phone Number (Optional)</FormLabel>
-                          <FormControl>
-                            <Input placeholder="+1..." {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="organization"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Organization (Optional)</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Your Company/Institution" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                  <FormField name="inquiryType" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Inquiry Type</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl><SelectTrigger><SelectValue placeholder="Select interest" /></SelectTrigger></FormControl>
+                        <SelectContent>
+                          <SelectItem value="store-inquiry">Impact Store Inquiry</SelectItem>
+                          <SelectItem value="partnership">Partnership Opportunity</SelectItem>
+                          <SelectItem value="volunteer">Volunteer Application</SelectItem>
+                          <SelectItem value="general">General Information</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
 
-                  <FormField
-                    control={form.control}
-                    name="inquiryType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Inquiry Type</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select what you're interested in" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="partnership">Partnership Opportunity</SelectItem>
-                            <SelectItem value="volunteer">Volunteer Application</SelectItem>
-                            <SelectItem value="donation">Donation/Give Support</SelectItem>
-                            <SelectItem value="media">Media/Press Inquiry</SelectItem>
-                            <SelectItem value="general">General Information</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="message"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Your Message</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Tell us how we can help you..." 
-                            className="min-h-[150px]" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <FormField control={form.control} name="message" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Your Message</FormLabel>
+                      <FormControl><Textarea placeholder="How can we help?" className="min-h-[150px]" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
 
                   <Button type="submit" className="w-full h-14 font-bold text-lg gap-2">
                     <Send className="w-5 h-5" />

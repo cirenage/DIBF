@@ -56,6 +56,44 @@
         "imageUrl": { "type": "string" },
         "publishedAt": { "type": "string", "format": "date-time" }
       }
+    },
+    "ImpactStory": {
+      "title": "Impact Story",
+      "description": "Real-world stories of foundation impact.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "beneficiary": { "type": "string" },
+        "location": { "type": "string" },
+        "story": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "category": { "type": "string" },
+        "featured": { "type": "boolean" }
+      }
+    },
+    "Partner": {
+      "title": "Partner",
+      "description": "Collaborating organization.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "type": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "Event": {
+      "title": "Event",
+      "description": "Upcoming or past foundation event.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "location": { "type": "string" },
+        "description": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "status": { "type": "string", "enum": ["upcoming", "past"] }
+      }
     }
   },
   "auth": {
@@ -66,6 +104,11 @@
     "/initiatives/{id}": { "schema": "Initiative", "description": "Foundation programs" },
     "/impactStore/{id}": { "schema": "ImpactStoreItem", "description": "Purpose-driven products" },
     "/news/{id}": { "schema": "NewsPost", "description": "Foundation news and insights" },
+    "/impactStories/{id}": { "schema": "ImpactStory", "description": "Stories of community change" },
+    "/partners/{id}": { "schema": "Partner", "description": "Global collaborators" },
+    "/events/{id}": { "schema": "Event", "description": "Outreach and events" },
+    "/teamMembers/{id}": { "schema": "object", "description": "Foundation leadership" },
+    "/publications/{id}": { "schema": "object", "description": "Reports and documents" },
     "/donations/{id}": { "schema": "object", "description": "Donation intent records" },
     "/contactMessages/{id}": { "schema": "object", "description": "Contact form submissions" },
     "/volunteerRequests/{id}": { "schema": "object", "description": "Volunteer applications" },
