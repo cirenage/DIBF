@@ -1,7 +1,8 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Read access for CMS content
+    // CMS Content - Publicly readable
     match /siteSettings/{id} { allow read: if true; allow write: if true; }
     match /heroSections/{id} { allow read: if true; allow write: if true; }
     match /initiatives/{id} { allow read: if true; allow write: if true; }
@@ -11,13 +12,13 @@ service cloud.firestore {
     match /events/{id} { allow read: if true; allow write: if true; }
     match /news/{id} { allow read: if true; allow write: if true; }
     match /publications/{id} { allow read: if true; allow write: if true; }
+    match /impactStore/{id} { allow read: if true; allow write: if true; }
     
-    // Write-only access for public forms
+    // Public forms - allow creation
     match /donations/{id} { allow create: if true; allow read: if true; }
     match /contactMessages/{id} { allow create: if true; allow read: if true; }
     match /volunteerRequests/{id} { allow create: if true; allow read: if true; }
     match /partnershipRequests/{id} { allow create: if true; allow read: if true; }
-    match /mediaRequests/{id} { allow create: if true; allow read: if true; }
     match /newsletterSubscriptions/{id} { allow create: if true; allow read: if true; }
   }
 }

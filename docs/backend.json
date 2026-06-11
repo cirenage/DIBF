@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "SiteSettings": {
@@ -13,21 +14,6 @@
         "officeHours": { "type": "string" }
       }
     },
-    "HeroSection": {
-      "title": "Hero Section",
-      "description": "Hero content for a specific page.",
-      "type": "object",
-      "properties": {
-        "eyebrow": { "type": "string" },
-        "heading": { "type": "string" },
-        "body": { "type": "string" },
-        "primaryCTA": { "type": "string" },
-        "primaryLink": { "type": "string" },
-        "secondaryCTA": { "type": "string" },
-        "secondaryLink": { "type": "string" },
-        "imageUrl": { "type": "string" }
-      }
-    },
     "Initiative": {
       "title": "Initiative",
       "description": "A flagship program of the foundation.",
@@ -35,8 +21,8 @@
       "properties": {
         "title": { "type": "string" },
         "slug": { "type": "string" },
-        "description": { "type": "string" },
         "summary": { "type": "string" },
+        "description": { "type": "string" },
         "category": { "type": "string" },
         "imageUrl": { "type": "string" },
         "bullets": { "type": "array", "items": { "type": "string" } },
@@ -44,43 +30,31 @@
         "order": { "type": "number" }
       }
     },
-    "ImpactStory": {
-      "title": "Impact Story",
-      "description": "Narratives of change from the field.",
+    "ImpactStoreItem": {
+      "title": "Impact Store Item",
+      "description": "A product available in the DIBF Impact Store.",
       "type": "object",
       "properties": {
         "title": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "string" },
         "category": { "type": "string" },
-        "body": { "type": "string" },
         "imageUrl": { "type": "string" },
-        "featured": { "type": "boolean" }
-      }
-    },
-    "TeamMember": {
-      "title": "Team Member",
-      "description": "Leadership and staff details.",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "role": { "type": "string" },
-        "bio": { "type": "string" },
-        "imageUrl": { "type": "string" },
+        "impactNote": { "type": "string" },
         "order": { "type": "number" }
       }
     },
-    "Donation": {
-      "title": "Donation",
-      "description": "Records of donation intent.",
+    "NewsPost": {
+      "title": "News Post",
+      "description": "Article or update from the foundation.",
       "type": "object",
       "properties": {
-        "fullName": { "type": "string" },
-        "email": { "type": "string" },
-        "phone": { "type": "string" },
-        "donationType": { "type": "string" },
-        "initiative": { "type": "string" },
-        "amount": { "type": "number" },
-        "message": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "title": { "type": "string" },
+        "slug": { "type": "string" },
+        "excerpt": { "type": "string" },
+        "content": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "publishedAt": { "type": "string", "format": "date-time" }
       }
     }
   },
@@ -89,11 +63,10 @@
   },
   "firestore": {
     "/siteSettings/main": { "schema": "SiteSettings", "description": "Global site configuration" },
-    "/heroSections/{pageSlug}": { "schema": "HeroSection", "description": "Page-specific hero content" },
     "/initiatives/{id}": { "schema": "Initiative", "description": "Foundation programs" },
-    "/impactStories/{id}": { "schema": "ImpactStory", "description": "Success stories" },
-    "/teamMembers/{id}": { "schema": "TeamMember", "description": "Staff and leadership" },
-    "/donations/{id}": { "schema": "Donation", "description": "Donation intent records" },
+    "/impactStore/{id}": { "schema": "ImpactStoreItem", "description": "Purpose-driven products" },
+    "/news/{id}": { "schema": "NewsPost", "description": "Foundation news and insights" },
+    "/donations/{id}": { "schema": "object", "description": "Donation intent records" },
     "/contactMessages/{id}": { "schema": "object", "description": "Contact form submissions" },
     "/volunteerRequests/{id}": { "schema": "object", "description": "Volunteer applications" },
     "/partnershipRequests/{id}": { "schema": "object", "description": "Partnership inquiries" }
