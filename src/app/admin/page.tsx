@@ -3,11 +3,11 @@
 
 import * as React from 'react';
 import { useFirestore, useMemoFirebase, useCollection } from '@/firebase';
-import { collection, doc, setDoc, addDoc, serverTimestamp, getDocs, query, limit, where } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, query, limit, where } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Sparkles, Database, ShoppingCart, Users, Heart, Globe, Newspaper, Calendar, FileText, CheckCircle2 } from 'lucide-react';
+import { Loader2, Sparkles, Database, ShoppingCart, Heart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
@@ -20,8 +20,6 @@ export default function AdminHub() {
   // Collection References
   const initsRef = useMemoFirebase(() => db ? collection(db, 'initiatives') : null, [db]);
   const storeRef = useMemoFirebase(() => db ? collection(db, 'impactStore') : null, [db]);
-  const newsRef = useMemoFirebase(() => db ? collection(db, 'news') : null, [db]);
-  const eventsRef = useMemoFirebase(() => db ? collection(db, 'events') : null, [db]);
 
   const { data: initiatives } = useCollection(initsRef);
   const { data: storeItems } = useCollection(storeRef);
@@ -30,13 +28,8 @@ export default function AdminHub() {
     if (!db) return;
     setIsSeeding(true);
 
-    const timeout = setTimeout(() => {
-      setIsSeeding(false);
-      toast({ variant: "destructive", title: "Timeout", description: "Seeding took too long. Check network/rules." });
-    }, 15000);
-
     try {
-      // 1. Impact Store Seeding (Comprehensive Categories)
+      // 1. Impact Store Seeding
       const storeItemsData = [
         {
           title: "Mental Resilience Journal",
@@ -88,15 +81,15 @@ export default function AdminHub() {
           description: "Traditional African basket crafted by local women's cooperatives.",
           price: "$65.00",
           category: "Creative and artistic pieces",
-          imageUrl: "https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&q=80&w=800",
+          imageUrl: "https://images.unsplash.com/photo-1528642463367-4d00371fab27?auto=format&fit=crop&q=80&w=800",
           impactNote: "Supports sustainable income for local artisans.",
           order: 6
         }
       ];
 
       for (const item of storeItemsData) {
-        const q = query(collection(db, 'impactStore'), where('title', '==', item.title), limit(1));
-        const snap = await getDocs(q);
+        const qCheck = query(collection(db, 'impactStore'), where('title', '==', item.title), limit(1));
+        const snap = await getDocs(qCheck);
         if (snap.empty) {
           await addDoc(collection(db, 'impactStore'), { ...item, createdAt: serverTimestamp() });
         }
@@ -137,8 +130,8 @@ export default function AdminHub() {
       ];
 
       for (const item of initiativesData) {
-        const q = query(collection(db, 'initiatives'), where('slug', '==', item.slug), limit(1));
-        const snap = await getDocs(q);
+        const qCheck = query(collection(db, 'initiatives'), where('slug', '==', item.slug), limit(1));
+        const snap = await getDocs(qCheck);
         if (snap.empty) {
           await addDoc(collection(db, 'initiatives'), { ...item, createdAt: serverTimestamp() });
         }
@@ -148,7 +141,6 @@ export default function AdminHub() {
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error", description: error.message });
     } finally {
-      clearTimeout(timeout);
       setIsSeeding(false);
     }
   };
@@ -173,7 +165,6 @@ export default function AdminHub() {
         <TabsList className="bg-muted p-1 rounded-xl h-12">
           <TabsTrigger value="store" className="px-6">Impact Store</TabsTrigger>
           <TabsTrigger value="initiatives" className="px-6">Initiatives</TabsTrigger>
-          <TabsTrigger value="submissions" className="px-6">Submissions</TabsTrigger>
         </TabsList>
 
         <TabsContent value="store">
@@ -222,43 +213,22 @@ export default function AdminHub() {
               <CardDescription>Programs displayed on the public site.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {initiatives.map((init: any) => (
-                  <div key={init.id} className="p-4 border rounded-xl">
-                    <h4 className="font-bold text-secondary">{init.title}</h4>
-                    <p className="text-xs text-muted-foreground mt-1">{init.summary}</p>
-                  </div>
-                ))}
-              </div>
+              {initiatives.length === 0 ? (
+                <div className="text-center py-20 italic text-muted-foreground border-2 border-dashed rounded-xl">
+                  No initiatives found. Click "Seed All Website Data".
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {initiatives.map((init: any) => (
+                    <div key={init.id} className="p-4 border rounded-xl">
+                      <h4 className="font-bold text-secondary">{init.title}</h4>
+                      <p className="text-xs text-muted-foreground mt-1">{init.summary}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="submissions">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card className="border-none shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-lg">Recent Inquiries</CardTitle>
-                <CardDescription>Contact messages and site feedback.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12 text-muted-foreground italic border-2 border-dashed rounded-xl">
-                  Inquiry logs are protected for privacy.
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="border-none shadow-lg text-white bg-primary">
-              <CardHeader>
-                <CardTitle className="text-lg">Donation Intents</CardTitle>
-                <CardDescription className="text-white/70">Recorded pledges and store checkout intents.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12 italic border-2 border-dashed border-white/20 rounded-xl">
-                  Secure transaction logs are managed here.
-                </div>
-              </CardContent>
-            </Card>
-          </div>
         </TabsContent>
       </Tabs>
     </div>

@@ -4,7 +4,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, Heart, ShoppingCart } from 'lucide-react';
+import { Menu, Heart, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -26,9 +26,11 @@ const NAV_LINKS = [
 export function Navbar() {
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = React.useState(false);
+  const [mounted, setMounted] = React.useState(false);
   const cartCount = useCart((state) => state.totalItems());
 
   React.useEffect(() => {
+    setMounted(true);
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -72,7 +74,7 @@ export function Navbar() {
             <CartDrawer>
               <Button variant="ghost" size="icon" className="relative h-10 w-10">
                 <ShoppingCart className="w-5 h-5 text-secondary" />
-                {cartCount > 0 && (
+                {mounted && cartCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-accent text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-md animate-in zoom-in-50">
                     {cartCount}
                   </span>
@@ -94,7 +96,7 @@ export function Navbar() {
           <CartDrawer>
             <Button variant="ghost" size="icon" className="relative h-9 w-9">
               <ShoppingCart className="w-4 h-4" />
-              {cartCount > 0 && (
+              {mounted && cartCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-accent text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-sm">
                   {cartCount}
                 </span>
