@@ -43,7 +43,7 @@ export default function AdminHub() {
         seeded++;
       }
 
-      // 2. Site Content (Partnership, Store Teaser, etc)
+      // 2. Site Content (Critical for Partnership, Store Teaser, etc)
       const content = [
         {
           id: 'partnership',
@@ -120,7 +120,17 @@ export default function AdminHub() {
         if (snap.empty) { await addDoc(collection(db, 'impactStore'), { ...item, createdAt: serverTimestamp() }); seeded++; } else skipped++;
       }
 
-      toast({ title: "Seed Complete", description: `Seeded ${seeded} records, skipped ${skipped} duplicates.` });
+      // 7. Impact Stories
+      const stories = [
+        { title: "A New Clinical Hub in Ghana", summary: "How the Tinewonsa Project transformed rural healthcare in the Ashanti region.", beneficiary: "Village of Ejisu", featured: true, category: "Healthcare", imageUrl: "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=800" }
+      ];
+      for (const story of stories) {
+        const q = query(collection(db, 'impactStories'), where('title', '==', story.title), limit(1));
+        const snap = await getDocs(q);
+        if (snap.empty) { await addDoc(collection(db, 'impactStories'), { ...story, createdAt: serverTimestamp() }); seeded++; } else skipped++;
+      }
+
+      toast({ title: "Seed Complete", description: `Seeded ${seeded} records. Collections 'siteContent' and 'heroSections' are now populated.` });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error Seeding", description: error.message });
     } finally {
@@ -150,10 +160,10 @@ export default function AdminHub() {
           <TabsTrigger value="content">Content Status</TabsTrigger>
         </TabsList>
         <TabsContent value="overview">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
              <Card><CardHeader><CardTitle className="text-sm">Initiatives</CardTitle></CardHeader><CardContent className="text-3xl font-bold">4</CardContent></Card>
              <Card><CardHeader><CardTitle className="text-sm">Focus Areas</CardTitle></CardHeader><CardContent className="text-3xl font-bold">4</CardContent></Card>
-             <Card><CardHeader><CardTitle className="text-sm">Impact Stats</CardTitle></CardHeader><CardContent className="text-3xl font-bold">4</CardContent></Card>
+             <Card><CardHeader><CardTitle className="text-sm">Site Content (CMS)</CardTitle></CardHeader><CardContent className="text-3xl font-bold">3</CardContent></Card>
              <Card><CardHeader><CardTitle className="text-sm">Store Items</CardTitle></CardHeader><CardContent className="text-3xl font-bold">2</CardContent></Card>
           </div>
         </TabsContent>
