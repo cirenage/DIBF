@@ -5,14 +5,22 @@ service cloud.firestore {
     // CMS Content - Publicly readable
     match /siteSettings/{id} { allow read, write: if true; }
     match /heroSections/{id} { allow read, write: if true; }
+    match /focusAreas/{id} { allow read, write: if true; }
+    match /impactStats/{id} { allow read, write: if true; }
     match /initiatives/{id} { allow read, write: if true; }
+    match /impactStore/{id} { allow read, write: if true; }
+    match /news/{id} { allow read, write: if true; }
     match /impactStories/{id} { allow read, write: if true; }
-    match /teamMembers/{id} { allow read, write: if true; }
     match /partners/{id} { allow read, write: if true; }
     match /events/{id} { allow read, write: if true; }
-    match /news/{id} { allow read, write: if true; }
+    match /teamMembers/{id} { allow read, write: if true; }
     match /publications/{id} { allow read, write: if true; }
-    match /impactStore/{id} { allow read, write: if true; }
+
+    // Additional CMS Collections requested for homepage content
+    match /homepageHero/{id} { allow read, write: if true; }
+    match /heroSlides/{id} { allow read, write: if true; }
+    match /homepageSections/{id} { allow read, write: if true; }
+    match /siteContent/{id} { allow read, write: if true; }
     
     // Public forms - allow creation and list
     match /donations/{id} { allow read, write: if true; }
@@ -20,5 +28,10 @@ service cloud.firestore {
     match /volunteerRequests/{id} { allow read, write: if true; }
     match /partnershipRequests/{id} { allow read, write: if true; }
     match /newsletterSubscriptions/{id} { allow read, write: if true; }
+
+    // Default deny for all other paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
   }
 }
