@@ -18,9 +18,9 @@ import { ArrowRight, ShoppingBag, Handshake, Heart, ShieldCheck } from 'lucide-r
 export default function HomePage() {
   const db = useFirestore();
 
-  // Hero Data
-  const heroRef = useMemoFirebase(() => db ? doc(db, 'heroSections', 'home') : null, [db]);
-  const { data: hero } = useDoc(heroRef);
+  // Hero Slides
+  const heroSlidesQuery = useMemoFirebase(() => db ? query(collection(db, 'heroSlides'), orderBy('order', 'asc')) : null, [db]);
+  const { data: heroSlides } = useCollection(heroSlidesQuery);
 
   // Featured Story
   const storyQuery = useMemoFirebase(() => db ? query(collection(db, 'impactStories'), where('featured', '==', true), limit(1)) : null, [db]);
@@ -48,7 +48,7 @@ export default function HomePage() {
 
   return (
     <div className="space-y-0">
-      <Hero data={hero} />
+      <Hero slides={heroSlides} />
 
       <FeaturedStory story={featuredStory} />
 

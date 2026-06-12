@@ -5,91 +5,167 @@ import * as React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
-import { ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronRight, ChevronLeft } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-interface HeroProps {
-  data?: any;
+interface HeroSlide {
+  id?: string;
+  eyebrow?: string;
+  heading?: string;
+  body?: string;
+  imageUrl?: string;
+  primaryCTA?: string;
+  primaryLink?: string;
+  secondaryCTA?: string;
+  secondaryLink?: string;
 }
 
-export function Hero({ data }: HeroProps) {
+interface HeroProps {
+  slides?: HeroSlide[];
+}
+
+export function Hero({ slides }: HeroProps) {
+  const [currentIndex, setCurrentIndex] = React.useState(0);
+  const [isPaused, setIsPaused] = React.useState(false);
+
+  const defaultSlides: HeroSlide[] = [
+    {
+      eyebrow: "Advancing Health. Human Dignity. Sustainable Development.",
+      heading: "Creating Pathways. Transforming Lives. Building Stronger Communities.",
+      body: "DIBF advances health equity, community wellbeing, youth empowerment, and sustainable development across Africa and underserved communities worldwide.",
+      imageUrl: "https://picsum.photos/seed/dibf-hero-default/1920/1080",
+      primaryCTA: "Support Our Work",
+      primaryLink: "/get-involved",
+      secondaryCTA: "Explore Initiatives",
+      secondaryLink: "/initiatives"
+    }
+  ];
+
+  const data = slides && slides.length > 0 ? slides : defaultSlides;
+
+  React.useEffect(() => {
+    if (data.length <= 1 || isPaused) return;
+
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % data.length);
+    }, 6000); // 6 seconds interval
+
+    return () => clearInterval(timer);
+  }, [data.length, isPaused]);
+
+  const handleNext = () => setCurrentIndex((prev) => (prev + 1) % data.length);
+  const handlePrev = () => setCurrentIndex((prev) => (prev - 1 + data.length) % data.length);
+
+  const currentSlide = data[currentIndex];
+
   return (
-    <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-secondary">
-      {/* Background Image with Overlay */}
-      <div className="absolute inset-0 z-0">
-        <Image
-          src={data?.imageUrl || "https://picsum.photos/seed/dibf-hero-gate/1920/1080"}
-          alt="DIBF Background"
-          fill
-          className="object-cover opacity-50"
-          priority
-          data-ai-hint="medical doctor children"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-secondary via-secondary/40 to-transparent" />
-      </div>
+    <section 
+      className="relative min-h-[90vh] flex items-center overflow-hidden bg-secondary"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
+      <AnimatePresence mode="wait">
+        <motion.div 
+          key={currentIndex}
+          className="absolute inset-0 z-0"
+          initial={{ opacity: 0, scale: 1.05 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
+        >
+          <Image
+            src={currentSlide.imageUrl || "https://picsum.photos/seed/dibf-placeholder/1920/1080"}
+            alt={currentSlide.heading || "DIBF"}
+            fill
+            className="object-cover opacity-60"
+            priority
+            data-ai-hint="medical doctor healthcare"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-secondary via-secondary/40 to-transparent" />
+        </motion.div>
+      </AnimatePresence>
 
       <div className="container mx-auto px-4 relative z-10 pt-20">
-        <motion.div 
-          className="max-w-4xl space-y-8"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        >
-          <div className="space-y-4">
-            <motion.span 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="text-accent font-bold uppercase tracking-[0.2em] text-sm block"
-            >
-              {data?.eyebrow || "Advancing Health. Human Dignity. Sustainable Development."}
-            </motion.span>
-            
-            <motion.h1 
+        <div className="max-w-4xl space-y-8">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`content-${currentIndex}`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.8 }}
-              className="text-4xl md:text-6xl lg:text-7xl font-bold text-white leading-[1.05] font-headline"
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="space-y-6"
             >
-              {data?.heading || "Creating Pathways. Transforming Lives. Building Stronger Communities."}
-            </motion.h1>
+              <div className="space-y-4">
+                <span className="text-accent font-bold uppercase tracking-[0.2em] text-sm block">
+                  {currentSlide.eyebrow}
+                </span>
+                
+                <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white leading-[1.05] font-headline">
+                  {currentSlide.heading}
+                </h1>
+              </div>
+              
+              <p className="text-lg md:text-xl text-white/80 leading-relaxed max-w-2xl font-body">
+                {currentSlide.body}
+              </p>
+
+              <div className="flex flex-wrap gap-4 pt-4">
+                {currentSlide.primaryCTA && (
+                  <Button asChild size="lg" className="h-14 px-10 text-lg font-bold shadow-2xl bg-accent hover:bg-accent/90 rounded-full transition-all">
+                    <Link href={currentSlide.primaryLink || "/get-involved"}>
+                      {currentSlide.primaryCTA}
+                    </Link>
+                  </Button>
+                )}
+                {currentSlide.secondaryCTA && (
+                  <Button asChild variant="outline" size="lg" className="h-14 px-10 text-lg font-bold border-white/30 text-white hover:bg-white/10 rounded-full transition-all gap-2">
+                    <Link href={currentSlide.secondaryLink || "/initiatives"}>
+                      {currentSlide.secondaryCTA} <ChevronRight className="w-5 h-5" />
+                    </Link>
+                  </Button>
+                )}
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Slide Indicators & Controls */}
+      {data.length > 1 && (
+        <>
+          <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-4 z-20">
+            <button 
+              onClick={handlePrev}
+              className="p-2 text-white/40 hover:text-white transition-colors"
+              aria-label="Previous slide"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+            <div className="flex gap-2">
+              {data.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentIndex(i)}
+                  className={cn(
+                    "h-1.5 transition-all duration-500 rounded-full",
+                    i === currentIndex ? "w-8 bg-accent" : "w-2 bg-white/20 hover:bg-white/40"
+                  )}
+                  aria-label={`Go to slide ${i + 1}`}
+                />
+              ))}
+            </div>
+            <button 
+              onClick={handleNext}
+              className="p-2 text-white/40 hover:text-white transition-colors"
+              aria-label="Next slide"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
           </div>
-          
-          <motion.p 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7 }}
-            className="text-lg md:text-xl text-white/80 leading-relaxed max-w-2xl font-body"
-          >
-            {data?.body || "DIBF advances health equity, community wellbeing, youth empowerment, and sustainable development across Africa and underserved communities worldwide."}
-          </motion.p>
-
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.9 }}
-            className="flex flex-wrap gap-4 pt-4"
-          >
-            <Button asChild size="lg" className="h-14 px-10 text-lg font-bold shadow-2xl bg-accent hover:bg-accent/90 rounded-full transition-all">
-              <Link href="/get-involved">
-                Support Our Work
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="h-14 px-10 text-lg font-bold border-white/30 text-white hover:bg-white/10 rounded-full transition-all gap-2">
-              <Link href="/initiatives">
-                Explore Initiatives <ChevronRight className="w-5 h-5" />
-              </Link>
-            </Button>
-          </motion.div>
-        </motion.div>
-      </div>
-
-      {/* Subtle Indicators (Visual only) */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-3">
-        <div className="w-8 h-1 bg-white rounded-full" />
-        <div className="w-2 h-1 bg-white/30 rounded-full" />
-        <div className="w-2 h-1 bg-white/30 rounded-full" />
-      </div>
+        </>
+      )}
     </section>
   );
 }

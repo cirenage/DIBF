@@ -22,28 +22,55 @@ export default function AdminHub() {
     let skipped = 0;
 
     try {
-      // 1. Hero Sections
-      const heroes = [
-        { 
-          id: 'home', 
-          eyebrow: "Healing Communities. Empowering Futures.", 
-          heading: "Advancing Health, Human Dignity, and Sustainable Development", 
-          body: "DIBF is the nonprofit and social impact arm of Doctors in Business Global, dedicated to health equity and sustainable development.",
-          imageUrl: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80&w=1920" 
+      // 1. Hero Slides (For Homepage Carousel)
+      const heroSlides = [
+        {
+          order: 1,
+          eyebrow: "Healing Communities. Empowering Futures.",
+          heading: "Advancing Health, Human Dignity, and Sustainable Development",
+          body: "DIBF is the nonprofit and social impact arm of Doctors in Business Global, dedicated to health equity and sustainable development across Africa.",
+          imageUrl: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80&w=1920",
+          primaryCTA: "Support Our Work",
+          primaryLink: "/get-involved",
+          secondaryCTA: "Explore Initiatives",
+          secondaryLink: "/initiatives"
         },
-        { 
-          id: 'about', 
-          heading: "Who We Are", 
-          body: "DIBF advances health equity, community wellbeing, and sustainable development across Africa and the global community.",
-          imageUrl: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=1920"
+        {
+          order: 2,
+          eyebrow: "Innovative Healthcare Solutions.",
+          heading: "Transforming Rural Care via The Tinewonsa Project",
+          body: "Revolutionizing primary healthcare in rural Africa through community-led clinical hubs and sustainable infrastructure.",
+          imageUrl: "https://images.unsplash.com/photo-1584432810601-6c7f27d2362b?auto=format&fit=crop&q=80&w=1920",
+          primaryCTA: "Learn About Tinewonsa",
+          primaryLink: "/initiatives",
+          secondaryCTA: "Our Impact",
+          secondaryLink: "/impact"
+        },
+        {
+          order: 3,
+          eyebrow: "Empowering the Next Generation.",
+          heading: "Fostering Youth Leadership and Mental Wellbeing",
+          body: "Equipping young leaders with the skills and mental resilience to drive change in their local communities.",
+          imageUrl: "https://images.unsplash.com/photo-1531983412531-1f49a365ffed?auto=format&fit=crop&q=80&w=1920",
+          primaryCTA: "Get Involved",
+          primaryLink: "/get-involved",
+          secondaryCTA: "View Programs",
+          secondaryLink: "/what-we-do"
         }
       ];
-      for (const h of heroes) {
-        await setDoc(doc(db, 'heroSections', h.id), { ...h, updatedAt: serverTimestamp() }, { merge: true });
-        seeded++;
+
+      for (const slide of heroSlides) {
+        const q = query(collection(db, 'heroSlides'), where('heading', '==', slide.heading), limit(1));
+        const snap = await getDocs(q);
+        if (snap.empty) {
+          await addDoc(collection(db, 'heroSlides'), { ...slide, createdAt: serverTimestamp() });
+          seeded++;
+        } else {
+          skipped++;
+        }
       }
 
-      // 2. Site Content (Critical for Partnership, Store Teaser, etc)
+      // 2. Site Content (CMS documents)
       const content = [
         {
           id: 'partnership',
@@ -109,18 +136,7 @@ export default function AdminHub() {
         if (snap.empty) { await addDoc(collection(db, 'initiatives'), { ...item, createdAt: serverTimestamp() }); seeded++; } else skipped++;
       }
 
-      // 6. Impact Store Items
-      const storeItems = [
-        { title: "Mental Health Awareness Kit", description: "A collection of journals and wellness tools.", price: "$25.00", category: "Mental health awareness merchandise", imageUrl: "https://images.unsplash.com/photo-1512418490979-92798ccc1380?auto=format&fit=crop&q=80&w=800", impactNote: "Supports youth mental health outreach", order: 1 },
-        { title: "Foundation Signature Tee", description: "Ethically sourced organic cotton t-shirt.", price: "$35.00", category: "Apparel and accessories", imageUrl: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=800", impactNote: "Funds 1 week of medical supplies", order: 2 }
-      ];
-      for (const item of storeItems) {
-        const q = query(collection(db, 'impactStore'), where('title', '==', item.title), limit(1));
-        const snap = await getDocs(q);
-        if (snap.empty) { await addDoc(collection(db, 'impactStore'), { ...item, createdAt: serverTimestamp() }); seeded++; } else skipped++;
-      }
-
-      // 7. Impact Stories
+      // 6. Impact Stories
       const stories = [
         { title: "A New Clinical Hub in Ghana", summary: "How the Tinewonsa Project transformed rural healthcare in the Ashanti region.", beneficiary: "Village of Ejisu", featured: true, category: "Healthcare", imageUrl: "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=800" }
       ];
@@ -130,7 +146,7 @@ export default function AdminHub() {
         if (snap.empty) { await addDoc(collection(db, 'impactStories'), { ...story, createdAt: serverTimestamp() }); seeded++; } else skipped++;
       }
 
-      toast({ title: "Seed Complete", description: `Seeded ${seeded} records. Collections 'siteContent' and 'heroSections' are now populated.` });
+      toast({ title: "Seed Complete", description: `Seeded ${seeded} records. The homepage carousel and all sections are now ready.` });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error Seeding", description: error.message });
     } finally {
@@ -164,7 +180,7 @@ export default function AdminHub() {
              <Card><CardHeader><CardTitle className="text-sm">Initiatives</CardTitle></CardHeader><CardContent className="text-3xl font-bold">4</CardContent></Card>
              <Card><CardHeader><CardTitle className="text-sm">Focus Areas</CardTitle></CardHeader><CardContent className="text-3xl font-bold">4</CardContent></Card>
              <Card><CardHeader><CardTitle className="text-sm">Site Content (CMS)</CardTitle></CardHeader><CardContent className="text-3xl font-bold">3</CardContent></Card>
-             <Card><CardHeader><CardTitle className="text-sm">Store Items</CardTitle></CardHeader><CardContent className="text-3xl font-bold">2</CardContent></Card>
+             <Card><CardHeader><CardTitle className="text-sm">Hero Slides</CardTitle></CardHeader><CardContent className="text-3xl font-bold">3</CardContent></Card>
           </div>
         </TabsContent>
       </Tabs>
