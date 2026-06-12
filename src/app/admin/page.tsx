@@ -139,76 +139,85 @@ export default function AdminHub() {
       // 6. Impact Store Items
       const storeItems = [
         {
+          title: "Mental Health Awareness Kit",
+          description: "A collection of journals and wellness tools.",
+          price: "$25.00",
+          category: "Mental health awareness merchandise",
+          imageUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=800",
+          impactNote: "Direct support for mental health programs",
+          order: 1
+        },
+        {
+          title: "Mental Resilience Journal",
+          description: "A guided 90-day journal for reflection and emotional wellbeing.",
+          price: "$25.00",
+          category: "Mental health awareness merchandise",
+          imageUrl: "https://images.unsplash.com/photo-1531346878377-a5be20888e57?auto=format&fit=crop&q=80&w=800",
+          impactNote: "Supports counseling services",
+          order: 2
+        },
+        {
+          title: "DIBF Unity Hoodie",
+          description: "Heavyweight cotton hoodie with embroidered foundation emblem.",
+          price: "$55.00",
+          category: "Apparel and accessories",
+          imageUrl: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800",
+          impactNote: "General outreach funding",
+          order: 3
+        },
+        {
+          title: "Foundation Signature Tee",
+          description: "Ethically sourced organic cotton t-shirt.",
+          price: "$35.00",
+          category: "Apparel and accessories",
+          imageUrl: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=800",
+          impactNote: "Youth advocacy programs",
+          order: 4
+        },
+        {
           title: "Eco-Bamboo Desk Set",
           description: "Sustainable bamboo office accessories for the conscious professional.",
           price: "$40.00",
           category: "Office and lifestyle items",
           imageUrl: "https://images.unsplash.com/photo-1591123120675-6f7f1aae0e5b?auto=format&fit=crop&q=80&w=800",
           impactNote: "Supports sustainable office initiatives",
-          order: 1
+          order: 5
         },
         {
           title: "Wellness Hydration Bottle",
           description: "Insulated stainless steel bottle to keep you hydrated on the go.",
           price: "$30.00",
           category: "Wellness and fitness products",
-          imageUrl: "https://images.unsplash.com/photo-1602143307185-8a1a558556e5?auto=format&fit=crop&q=80&w=800",
+          imageUrl: "https://images.unsplash.com/photo-1523362628745-0c100150b504?auto=format&fit=crop&q=80&w=800",
           impactNote: "Funding for rural water projects",
-          order: 2
+          order: 6
         },
         {
           title: "Legacy Awareness Band",
           description: "Representing collective responsibility in healthcare.",
           price: "$10.00",
-          category: "Mental health awareness merchandise",
+          category: "Awareness campaigns and themed collections",
           imageUrl: "https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&q=80&w=800",
           impactNote: "Direct support for mental health outreaches",
-          order: 3
+          order: 7
         },
         {
           title: "Dollar-A-Day Campaign Band",
           description: "Silicon awareness wristband representing collective generosity.",
           price: "$5.00",
-          category: "Mental health awareness merchandise",
+          category: "Awareness campaigns and themed collections",
           imageUrl: "https://images.unsplash.com/photo-1589156229687-496a31ad1d1f?auto=format&fit=crop&q=80&w=800",
           impactNote: "Sustaining the Dollar-A-Day fund",
-          order: 4
-        },
-        {
-          title: "Hand-Woven Community Basket",
-          description: "Traditional African basket crafted by local women's cooperatives.",
-          price: "$65.00",
-          category: "Community-inspired products",
-          imageUrl: "https://images.unsplash.com/photo-1590595906931-81f04f0ccebb?auto=format&fit=crop&q=80&w=800",
-          impactNote: "Empowering rural women artisans",
-          order: 5
-        },
-        {
-          title: "Community Canvas Tote",
-          description: "Eco-friendly tote featuring local African artwork.",
-          price: "$20.00",
-          category: "Apparel and accessories",
-          imageUrl: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&q=80&w=800",
-          impactNote: "Supports local art programs",
-          order: 6
+          order: 8
         },
         {
           title: "Hand-Crafted Beaded Keyring",
           description: "Intricate beadwork from women's cooperatives.",
           price: "$15.00",
           category: "Community-inspired products",
-          imageUrl: "https://images.unsplash.com/photo-1629198688000-71f23e745b6e?auto=format&fit=crop&q=80&w=800",
+          imageUrl: "https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?auto=format&fit=crop&q=80&w=800",
           impactNote: "Direct beneficiary income generation",
-          order: 7
-        },
-        {
-          title: "Founder's Special Notebook",
-          description: "Gold-embossed journal for visionary thinkers.",
-          price: "$35.00",
-          category: "Office and lifestyle items",
-          imageUrl: "https://images.unsplash.com/photo-1531346878377-a5be20888e57?auto=format&fit=crop&q=80&w=800",
-          impactNote: "Scholarship fund contribution",
-          order: 8
+          order: 9
         }
       ];
 
@@ -219,7 +228,10 @@ export default function AdminHub() {
           await addDoc(collection(db, 'impactStore'), { ...item, createdAt: serverTimestamp() });
           seeded++;
         } else {
-          skipped++;
+          // Update existing docs to ensure correct images
+          const docId = snap.docs[0].id;
+          await setDoc(doc(db, 'impactStore', docId), { ...item, updatedAt: serverTimestamp() }, { merge: true });
+          seeded++;
         }
       }
 
@@ -233,7 +245,7 @@ export default function AdminHub() {
         if (snap.empty) { await addDoc(collection(db, 'impactStories'), { ...story, createdAt: serverTimestamp() }); seeded++; } else skipped++;
       }
 
-      toast({ title: "Seed Complete", description: `Seeded ${seeded} records. The homepage carousel and all sections are now ready.` });
+      toast({ title: "Seed Complete", description: `Updated ${seeded} records. All product images and sections are now ready.` });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error Seeding", description: error.message });
     } finally {
@@ -266,7 +278,7 @@ export default function AdminHub() {
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
              <Card><CardHeader><CardTitle className="text-sm">Initiatives</CardTitle></CardHeader><CardContent className="text-3xl font-bold">4</CardContent></Card>
              <Card><CardHeader><CardTitle className="text-sm">Focus Areas</CardTitle></CardHeader><CardContent className="text-3xl font-bold">4</CardContent></Card>
-             <Card><CardHeader><CardTitle className="text-sm">Store Items</CardTitle></CardHeader><CardContent className="text-3xl font-bold">8</CardContent></Card>
+             <Card><CardHeader><CardTitle className="text-sm">Store Items</CardTitle></CardHeader><CardContent className="text-3xl font-bold">9</CardContent></Card>
              <Card><CardHeader><CardTitle className="text-sm">Hero Slides</CardTitle></CardHeader><CardContent className="text-3xl font-bold">3</CardContent></Card>
           </div>
         </TabsContent>
