@@ -14,6 +14,17 @@
         "officeHours": { "type": "string" }
       }
     },
+    "SiteContent": {
+      "title": "Site Content",
+      "description": "Miscellaneous page content and static-style imagery.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "subtitle": { "type": "string" },
+        "description": { "type": "string" },
+        "imageUrl": { "type": "string" }
+      }
+    },
     "Initiative": {
       "title": "Initiative",
       "description": "A flagship program of the foundation.",
@@ -113,6 +124,7 @@
   },
   "firestore": {
     "/siteSettings/main": { "schema": "SiteSettings", "description": "Global site configuration" },
+    "/siteContent/{id}": { "schema": "SiteContent", "description": "Page-specific static content" },
     "/focusAreas/{id}": { "schema": "FocusArea", "description": "Core pillars of work" },
     "/impactStats/{id}": { "schema": "ImpactStat", "description": "Key impact metrics" },
     "/initiatives/{id}": { "schema": "Initiative", "description": "Foundation programs" },

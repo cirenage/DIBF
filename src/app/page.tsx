@@ -22,16 +22,16 @@ export default function HomePage() {
   const heroRef = useMemoFirebase(() => db ? doc(db, 'heroSections', 'home') : null, [db]);
   const { data: hero } = useDoc(heroRef);
 
-  // Featured Story (latest news or impact story)
+  // Featured Story
   const storyQuery = useMemoFirebase(() => db ? query(collection(db, 'impactStories'), where('featured', '==', true), limit(1)) : null, [db]);
   const { data: featuredStories } = useCollection(storyQuery);
   const featuredStory = featuredStories?.[0];
 
-  // Initiatives - Limit to top 4 for a clean premium grid layout
+  // Initiatives
   const initiativesQuery = useMemoFirebase(() => db ? query(collection(db, 'initiatives'), orderBy('order', 'asc'), limit(4)) : null, [db]);
   const { data: initiatives } = useCollection(initiativesQuery);
 
-  // Focus Areas (What We Do) - Limited to top 4 as per design guidelines
+  // Focus Areas
   const focusAreasQuery = useMemoFirebase(() => db ? query(collection(db, 'focusAreas'), orderBy('order', 'asc'), limit(4)) : null, [db]);
   const { data: focusAreas } = useCollection(focusAreasQuery);
 
@@ -39,17 +39,21 @@ export default function HomePage() {
   const statsQuery = useMemoFirebase(() => db ? query(collection(db, 'impactStats'), orderBy('order', 'asc')) : null, [db]);
   const { data: stats } = useCollection(statsQuery);
 
+  // Site Content (Partnership & Store Teaser)
+  const partnershipContentRef = useMemoFirebase(() => db ? doc(db, 'siteContent', 'partnership') : null, [db]);
+  const { data: partnershipContent } = useDoc(partnershipContentRef);
+
+  const storeTeaserContentRef = useMemoFirebase(() => db ? doc(db, 'siteContent', 'storeTeaser') : null, [db]);
+  const { data: storeTeaserContent } = useDoc(storeTeaserContentRef);
+
   return (
     <div className="space-y-0">
       <Hero data={hero} />
 
-      {/* Featured Story Section */}
       <FeaturedStory story={featuredStory} />
 
-      {/* What We Do Section */}
       <WhatWeDoGrid focusAreas={focusAreas} />
 
-      {/* Featured Initiatives Section */}
       <section className="py-24 bg-muted/30">
         <div className="container mx-auto px-4">
           <SectionHeader 
@@ -90,32 +94,21 @@ export default function HomePage() {
               <Link href="/initiatives">View All Initiatives</Link>
             </Button>
           </div>
-
-          {initiatives.length === 0 && (
-            <div className="text-center py-12 bg-white rounded-2xl border-2 border-dashed border-muted">
-              <p className="text-muted-foreground">No initiatives found. Please visit the Admin Hub to seed data.</p>
-              <Button asChild variant="outline" className="mt-4">
-                <Link href="/admin">Go to Admin Hub</Link>
-              </Button>
-            </div>
-          )}
         </div>
       </section>
 
-      {/* Impact Numbers Section */}
       <ImpactStats stats={stats} />
 
-      {/* Partnership Section */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="space-y-8 order-2 lg:order-1">
               <div className="space-y-4">
                 <h2 className="text-3xl md:text-5xl font-bold text-secondary font-headline leading-tight">
-                  Stronger Together. <br />Greater Impact.
+                  {partnershipContent?.title || "Stronger Together. Greater Impact."}
                 </h2>
                 <p className="text-lg text-muted-foreground leading-relaxed max-w-xl">
-                  We believe meaningful change happens through collaboration. Partner with us to build healthier, more resilient communities across the globe.
+                  {partnershipContent?.description || "We believe meaningful change happens through collaboration. Partner with us to build healthier, more resilient communities across the globe."}
                 </p>
               </div>
               <Button asChild size="lg" className="h-14 px-10 font-bold bg-primary rounded-full gap-2">
@@ -126,7 +119,7 @@ export default function HomePage() {
             </div>
             <div className="relative h-[400px] lg:h-[500px] rounded-3xl overflow-hidden shadow-2xl order-1 lg:order-2">
               <Image 
-                src="https://picsum.photos/seed/partnership-home/800/600" 
+                src={partnershipContent?.imageUrl || "https://picsum.photos/seed/partnership-home/800/600"} 
                 alt="Partnership" 
                 fill 
                 className="object-cover"
@@ -137,13 +130,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Impact Store Section Teaser */}
       <section className="py-24 bg-muted/50">
         <div className="container mx-auto px-4">
           <div className="bg-white rounded-[2.5rem] shadow-xl overflow-hidden grid grid-cols-1 lg:grid-cols-2 items-center">
             <div className="relative h-[400px] lg:h-full">
               <Image 
-                src="https://picsum.photos/seed/store-teaser/800/800" 
+                src={storeTeaserContent?.imageUrl || "https://picsum.photos/seed/store-teaser/800/800"} 
                 alt="Impact Store" 
                 fill 
                 className="object-cover"
@@ -153,9 +145,11 @@ export default function HomePage() {
             <div className="p-12 lg:p-20 space-y-8">
               <div className="space-y-4">
                 <span className="text-accent font-bold uppercase tracking-widest text-xs">DIBF Impact Store</span>
-                <h2 className="text-3xl md:text-5xl font-bold text-secondary font-headline">Shop With Purpose.</h2>
+                <h2 className="text-3xl md:text-5xl font-bold text-secondary font-headline">
+                  {storeTeaserContent?.title || "Shop With Purpose."}
+                </h2>
                 <p className="text-lg text-muted-foreground leading-relaxed">
-                  Every purchase supports initiatives that advance health, promote wellbeing, and create opportunities for lasting impact.
+                  {storeTeaserContent?.description || "Every purchase supports initiatives that advance health, promote wellbeing, and create opportunities for lasting impact."}
                 </p>
               </div>
               <Button asChild size="lg" className="h-14 px-10 font-bold bg-secondary rounded-full gap-2">
@@ -168,7 +162,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Final CTA Section */}
       <section className="py-24 bg-secondary text-white">
         <div className="container mx-auto px-4 text-center space-y-16">
           <div className="space-y-4 max-w-3xl mx-auto">

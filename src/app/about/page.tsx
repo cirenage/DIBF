@@ -2,11 +2,22 @@
 "use client";
 
 import * as React from 'react';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 import { SectionHeader } from '@/components/shared/SectionHeader';
 import { Card, CardContent } from '@/components/ui/card';
-import { ShieldCheck, Target, Eye, Users, Heart, Lightbulb, TrendingUp, Handshake } from 'lucide-react';
+import { ShieldCheck, Users, Heart, Lightbulb, TrendingUp, Handshake } from 'lucide-react';
 
 export default function AboutPage() {
+  const db = useFirestore();
+
+  // About Page Content
+  const aboutRef = useMemoFirebase(() => db ? doc(db, 'heroSections', 'about') : null, [db]);
+  const { data: hero } = useDoc(aboutRef);
+
+  const whoWeAreRef = useMemoFirebase(() => db ? doc(db, 'siteContent', 'aboutWhoWeAre') : null, [db]);
+  const { data: whoWeAre } = useDoc(whoWeAreRef);
+
   const values = [
     { icon: Heart, title: "Human Dignity", desc: "We value every person and uphold respect, compassion, and inclusion in all we do." },
     { icon: ShieldCheck, title: "Integrity", desc: "We act with transparency, accountability, and the highest ethical standards." },
@@ -20,9 +31,9 @@ export default function AboutPage() {
     <div className="min-h-screen">
       <section className="bg-secondary text-white py-24 text-center">
         <div className="container mx-auto px-4 max-w-3xl space-y-6">
-          <h1 className="text-4xl md:text-6xl font-bold font-headline">About DIBF</h1>
+          <h1 className="text-4xl md:text-6xl font-bold font-headline">{hero?.heading || "About DIBF"}</h1>
           <p className="text-xl text-white/70 leading-relaxed">
-            Doctors in Business Foundation | DIBF is the nonprofit and social impact arm of Doctors in Business Global, advancing health equity and sustainable development.
+            {hero?.body || "Doctors in Business Foundation | DIBF is the nonprofit and social impact arm of Doctors in Business Global."}
           </p>
         </div>
       </section>
@@ -32,12 +43,12 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="space-y-6">
               <SectionHeader 
-                title="Who We Are" 
+                title={whoWeAre?.title || "Who We Are"} 
                 alignment="left"
-                subtitle="DIBF was established to advance health equity, human dignity, and sustainable development by transforming shared responsibility into meaningful action."
+                subtitle={whoWeAre?.subtitle || "DIBF was established to advance health equity, human dignity, and sustainable development."}
               />
               <p className="text-lg text-muted-foreground leading-relaxed">
-                With a strong foundation in healthcare and a broader commitment to human development, DIBF supports initiatives that improve lives, expand opportunities, and contribute to healthier, more resilient communities.
+                {whoWeAre?.description || "With a strong foundation in healthcare and a broader commitment to human development, DIBF supports initiatives that improve lives."}
               </p>
               <div className="bg-primary/5 p-8 rounded-2xl border-l-4 border-primary italic">
                 <p className="text-xl text-secondary font-medium">
@@ -47,7 +58,7 @@ export default function AboutPage() {
             </div>
             <div className="relative h-[500px] rounded-3xl overflow-hidden shadow-2xl">
               <img 
-                src="https://picsum.photos/seed/about-impact/800/1000" 
+                src={whoWeAre?.imageUrl || "https://picsum.photos/seed/about-impact/800/1000"} 
                 alt="Impact" 
                 className="w-full h-full object-cover"
               />
