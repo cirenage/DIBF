@@ -9,9 +9,8 @@ import { FeaturedStory } from '@/components/home/FeaturedStory';
 import { WhatWeDoGrid } from '@/components/home/WhatWeDoGrid';
 import { ImpactStats } from '@/components/home/ImpactStats';
 import { SectionHeader } from '@/components/shared/SectionHeader';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, ShoppingBag, Handshake, Heart, ShieldCheck } from 'lucide-react';
@@ -28,8 +27,8 @@ export default function HomePage() {
   const { data: featuredStories } = useCollection(storyQuery);
   const featuredStory = featuredStories?.[0];
 
-  // Initiatives - Show all initiatives instead of just 4
-  const initiativesQuery = useMemoFirebase(() => db ? query(collection(db, 'initiatives'), orderBy('order', 'asc')) : null, [db]);
+  // Initiatives - Limit to top 4 for a clean premium grid layout
+  const initiativesQuery = useMemoFirebase(() => db ? query(collection(db, 'initiatives'), orderBy('order', 'asc'), limit(4)) : null, [db]);
   const { data: initiatives } = useCollection(initiativesQuery);
 
   // Focus Areas (What We Do) - Limited to top 4 as per design guidelines
@@ -86,6 +85,12 @@ export default function HomePage() {
             ))}
           </div>
           
+          <div className="mt-12 text-center">
+            <Button asChild variant="outline" className="rounded-full px-10 h-12 border-primary text-primary font-bold hover:bg-primary hover:text-white transition-all">
+              <Link href="/initiatives">View All Initiatives</Link>
+            </Button>
+          </div>
+
           {initiatives.length === 0 && (
             <div className="text-center py-12 bg-white rounded-2xl border-2 border-dashed border-muted">
               <p className="text-muted-foreground">No initiatives found. Please visit the Admin Hub to seed data.</p>
