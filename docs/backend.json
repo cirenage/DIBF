@@ -30,6 +30,30 @@
         "order": { "type": "number" }
       }
     },
+    "FocusArea": {
+      "title": "Focus Area",
+      "description": "Core pillar of the foundation's work.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "iconName": { "type": "string" },
+        "link": { "type": "string" },
+        "order": { "type": "number" }
+      }
+    },
+    "ImpactStat": {
+      "title": "Impact Stat",
+      "description": "Metric tracking foundation progress.",
+      "type": "object",
+      "properties": {
+        "label": { "type": "string" },
+        "value": { "type": "number" },
+        "suffix": { "type": "string" },
+        "iconName": { "type": "string" },
+        "order": { "type": "number" }
+      }
+    },
     "ImpactStoreItem": {
       "title": "Impact Store Item",
       "description": "A product available in the DIBF Impact Store.",
@@ -65,6 +89,7 @@
         "title": { "type": "string" },
         "beneficiary": { "type": "string" },
         "location": { "type": "string" },
+        "summary": { "type": "string" },
         "story": { "type": "string" },
         "imageUrl": { "type": "string" },
         "category": { "type": "string" },
@@ -81,19 +106,6 @@
         "type": { "type": "string" },
         "description": { "type": "string" }
       }
-    },
-    "Event": {
-      "title": "Event",
-      "description": "Upcoming or past foundation event.",
-      "type": "object",
-      "properties": {
-        "title": { "type": "string" },
-        "date": { "type": "string", "format": "date" },
-        "location": { "type": "string" },
-        "description": { "type": "string" },
-        "imageUrl": { "type": "string" },
-        "status": { "type": "string", "enum": ["upcoming", "past"] }
-      }
     }
   },
   "auth": {
@@ -101,17 +113,14 @@
   },
   "firestore": {
     "/siteSettings/main": { "schema": "SiteSettings", "description": "Global site configuration" },
+    "/focusAreas/{id}": { "schema": "FocusArea", "description": "Core pillars of work" },
+    "/impactStats/{id}": { "schema": "ImpactStat", "description": "Key impact metrics" },
     "/initiatives/{id}": { "schema": "Initiative", "description": "Foundation programs" },
     "/impactStore/{id}": { "schema": "ImpactStoreItem", "description": "Purpose-driven products" },
     "/news/{id}": { "schema": "NewsPost", "description": "Foundation news and insights" },
     "/impactStories/{id}": { "schema": "ImpactStory", "description": "Stories of community change" },
     "/partners/{id}": { "schema": "Partner", "description": "Global collaborators" },
-    "/events/{id}": { "schema": "Event", "description": "Outreach and events" },
-    "/teamMembers/{id}": { "schema": "object", "description": "Foundation leadership" },
-    "/publications/{id}": { "schema": "object", "description": "Reports and documents" },
     "/donations/{id}": { "schema": "object", "description": "Donation intent records" },
-    "/contactMessages/{id}": { "schema": "object", "description": "Contact form submissions" },
-    "/volunteerRequests/{id}": { "schema": "object", "description": "Volunteer applications" },
-    "/partnershipRequests/{id}": { "schema": "object", "description": "Partnership inquiries" }
+    "/contactMessages/{id}": { "schema": "object", "description": "Contact form submissions" }
   }
 }

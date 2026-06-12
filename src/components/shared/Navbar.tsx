@@ -4,23 +4,57 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, Heart, ShoppingCart } from 'lucide-react';
+import { Menu, Heart, ShoppingCart, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { CartDrawer } from '@/components/store/CartDrawer';
 import { useCart } from '@/hooks/use-cart';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-const NAV_LINKS = [
-  { href: '/', label: 'Home' },
-  { href: '/about', label: 'About DIBF' },
-  { href: '/what-we-do', label: 'What We Do' },
-  { href: '/initiatives', label: 'Initiatives' },
-  { href: '/impact', label: 'Impact' },
-  { href: '/partnerships', label: 'Partnerships' },
-  { href: '/get-involved', label: 'Get Involved' },
-  { href: '/news', label: 'News' },
-  { href: '/contact', label: 'Contact' },
+const NAV_GROUPS = [
+  {
+    label: 'About',
+    items: [
+      { href: '/about', label: 'Who We Are' },
+      { href: '/about#mission', label: 'Mission & Vision' },
+      { href: '/about#leadership', label: 'Leadership & Governance' },
+    ]
+  },
+  {
+    label: 'Our Work',
+    items: [
+      { href: '/what-we-do', label: 'Medical Outreach & Community Health' },
+      { href: '/what-we-do', label: 'Public Health Education' },
+      { href: '/what-we-do', label: 'Youth & Student Impact' },
+      { href: '/what-we-do', label: 'Mental Health & Wellbeing' },
+      { href: '/what-we-do', label: 'Sustainable Giving Initiatives' },
+    ]
+  },
+  {
+    label: 'Impact',
+    items: [
+      { href: '/impact', label: 'Stories of Impact' },
+      { href: '/impact#reports', label: 'Outreach Reports' },
+      { href: '/impact', label: 'Community Highlights' },
+      { href: '/impact', label: 'Photo & Video Gallery' },
+    ]
+  },
+  {
+    label: 'Get Involved',
+    items: [
+      { href: '/get-involved', label: 'Volunteer' },
+      { href: '/give', label: 'Donate' },
+      { href: '/partnerships', label: 'Partner With Us' },
+      { href: '/get-involved', label: 'Bring a Team' },
+      { href: '/get-involved', label: 'Support a Campaign' },
+    ]
+  }
 ];
 
 export function Navbar() {
@@ -53,26 +87,28 @@ export function Navbar() {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden xl:flex items-center gap-6">
-          {NAV_LINKS.map((link) => {
-            const isActive = pathname === link.href;
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  "text-sm font-semibold transition-colors nav-link-underline",
-                  isActive ? "text-primary active font-bold" : "text-secondary/80 hover:text-primary"
-                )}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
+        <nav className="hidden xl:flex items-center gap-8">
+          {NAV_GROUPS.map((group) => (
+            <DropdownMenu key={group.label}>
+              <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-semibold text-secondary/80 hover:text-primary outline-none transition-colors">
+                {group.label}
+                <ChevronDown className="w-4 h-4 opacity-50" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56 p-2 rounded-xl shadow-2xl border-muted">
+                {group.items.map((item) => (
+                  <DropdownMenuItem key={item.label} asChild>
+                    <Link href={item.href} className="w-full cursor-pointer rounded-lg hover:bg-muted py-2.5 px-3 text-sm font-medium">
+                      {item.label}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ))}
           
           <div className="flex items-center gap-4 ml-4">
             <CartDrawer>
-              <Button variant="ghost" size="icon" className="relative h-10 w-10">
+              <Button variant="ghost" size="icon" className="relative h-10 w-10 hover:bg-muted rounded-full">
                 <ShoppingCart className="w-5 h-5 text-secondary" />
                 {mounted && cartCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-accent text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-md animate-in zoom-in-50">
@@ -82,10 +118,10 @@ export function Navbar() {
               </Button>
             </CartDrawer>
             
-            <Button asChild className="gap-2 px-6 font-bold shadow-md">
+            <Button asChild className="gap-2 px-8 h-12 rounded-full font-bold shadow-lg hover:scale-105 transition-transform">
               <Link href="/give">
                 <Heart className="w-4 h-4 fill-current" />
-                Donate
+                Give
               </Link>
             </Button>
           </div>
@@ -110,27 +146,31 @@ export function Navbar() {
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right">
+            <SheetContent side="right" className="w-[300px]">
               <SheetHeader>
-                <SheetTitle className="text-left text-primary font-bold">Navigation</SheetTitle>
+                <SheetTitle className="text-left text-primary font-bold">DIBF Menu</SheetTitle>
               </SheetHeader>
-              <nav className="flex flex-col gap-2 mt-8">
-                {NAV_LINKS.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={cn(
-                      "text-lg font-bold py-3 border-b border-muted transition-colors",
-                      pathname === link.href ? "text-primary" : "text-secondary"
-                    )}
-                  >
-                    {link.label}
-                  </Link>
+              <nav className="flex flex-col gap-4 mt-8">
+                {NAV_GROUPS.map((group) => (
+                  <div key={group.label} className="space-y-3">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{group.label}</p>
+                    <div className="flex flex-col gap-2 pl-2">
+                      {group.items.map((item) => (
+                        <Link
+                          key={item.label}
+                          href={item.href}
+                          className="text-sm font-semibold text-secondary hover:text-primary transition-colors"
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
                 ))}
-                <Button asChild className="mt-6 gap-2 h-14 font-bold">
+                <Button asChild className="mt-6 gap-2 h-14 font-bold rounded-xl">
                   <Link href="/give">
                     <Heart className="w-4 h-4 fill-current" />
-                    Make a Donation
+                    Give
                   </Link>
                 </Button>
               </nav>
