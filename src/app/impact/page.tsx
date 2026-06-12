@@ -4,9 +4,7 @@
 import * as React from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, limit } from 'firebase/firestore';
-import { AnimatedHero } from '@/components/shared/AnimatedHero';
 import { SectionHeader } from '@/components/shared/SectionHeader';
-import { RevealItem } from '@/components/shared/ScrollReveal';
 import { Card, CardContent } from '@/components/ui/card';
 import { FileText, ArrowRight, Heart } from 'lucide-react';
 import Image from 'next/image';
@@ -19,35 +17,35 @@ export default function ImpactPage() {
 
   return (
     <div className="min-h-screen">
-      <AnimatedHero 
-        eyebrow="Our Impact"
-        heading="Real Stories. Real Change."
-        body="Every life touched, every community strengthened, and every partnership formed brings us closer to a healthier, more equitable world."
-        imageUrl="https://picsum.photos/seed/dibf-impact/1920/1080"
-        primaryCTA="Read Our Reports"
-        primaryLink="#reports"
-      />
+      <section className="bg-secondary text-white py-24 text-center">
+        <div className="container mx-auto px-4 max-w-3xl space-y-6">
+          <h1 className="text-4xl md:text-6xl font-bold font-headline">Our Impact</h1>
+          <p className="text-xl text-white/70 leading-relaxed">
+            Every life touched, every community strengthened, and every partnership formed brings us closer to a healthier, more equitable world.
+          </p>
+        </div>
+      </section>
 
       {/* Stats Section */}
-      <section className="py-12 bg-secondary text-white">
+      <section className="py-12 bg-secondary text-white border-t border-white/10">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <RevealItem>
+            <div>
               <p className="text-3xl md:text-5xl font-bold text-accent">15K+</p>
               <p className="text-sm text-white/70 mt-1 uppercase tracking-wider">Lives Impacted</p>
-            </RevealItem>
-            <RevealItem>
+            </div>
+            <div>
               <p className="text-3xl md:text-5xl font-bold text-accent">100+</p>
               <p className="text-sm text-white/70 mt-1 uppercase tracking-wider">Communities Reached</p>
-            </RevealItem>
-            <RevealItem>
+            </div>
+            <div>
               <p className="text-3xl md:text-5xl font-bold text-accent">80+</p>
               <p className="text-sm text-white/70 mt-1 uppercase tracking-wider">Programs Delivered</p>
-            </RevealItem>
-            <RevealItem>
+            </div>
+            <div>
               <p className="text-3xl md:text-5xl font-bold text-accent">50+</p>
               <p className="text-sm text-white/70 mt-1 uppercase tracking-wider">Partner Collaborations</p>
-            </RevealItem>
+            </div>
           </div>
         </div>
       </section>
@@ -57,28 +55,26 @@ export default function ImpactPage() {
           <SectionHeader title="Stories of Impact" subtitle="A collection of narratives highlighting the transformative power of shared responsibility." />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {stories.map((story, i) => (
-              <RevealItem key={story.id}>
-                <Card className="h-full border-none shadow-lg overflow-hidden flex flex-col group hover:shadow-2xl transition-all duration-500">
-                  <div className="relative h-64 overflow-hidden">
-                    <Image 
-                      src={story.imageUrl || `https://picsum.photos/seed/story-${i}/600/400`} 
-                      alt={story.title} 
-                      fill 
-                      className="object-cover group-hover:scale-110 transition-transform duration-700"
-                    />
-                    <div className="absolute top-4 left-4">
-                      <span className="bg-white/90 px-3 py-1 rounded-full text-xs font-bold text-primary">{story.category}</span>
-                    </div>
+              <Card key={story.id || i} className="h-full border-none shadow-lg overflow-hidden flex flex-col group hover:shadow-2xl transition-all duration-500">
+                <div className="relative h-64 overflow-hidden">
+                  <Image 
+                    src={story.imageUrl || `https://picsum.photos/seed/story-${i}/600/400`} 
+                    alt={story.title} 
+                    fill 
+                    className="object-cover group-hover:scale-110 transition-transform duration-700"
+                  />
+                  <div className="absolute top-4 left-4">
+                    <span className="bg-white/90 px-3 py-1 rounded-full text-xs font-bold text-primary">{story.category}</span>
                   </div>
-                  <CardContent className="p-8 flex-1 space-y-4">
-                    <h4 className="text-xl font-bold text-secondary">{story.title}</h4>
-                    <p className="text-muted-foreground line-clamp-3 leading-relaxed">{story.summary}</p>
-                    <div className="flex items-center gap-2 text-primary font-bold text-sm cursor-pointer group-hover:gap-3 transition-all">
-                      Read full story <ArrowRight className="w-4 h-4" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </RevealItem>
+                </div>
+                <CardContent className="p-8 flex-1 space-y-4">
+                  <h4 className="text-xl font-bold text-secondary">{story.title}</h4>
+                  <p className="text-muted-foreground line-clamp-3 leading-relaxed">{story.summary}</p>
+                  <div className="flex items-center gap-2 text-primary font-bold text-sm cursor-pointer group-hover:gap-3 transition-all">
+                    Read full story <ArrowRight className="w-4 h-4" />
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>

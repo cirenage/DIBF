@@ -4,14 +4,13 @@
 import * as React from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
-import { AnimatedHero } from '@/components/shared/AnimatedHero';
 import { SectionHeader } from '@/components/shared/SectionHeader';
 import { Card, CardContent } from '@/components/ui/card';
-import { RevealItem } from '@/components/shared/ScrollReveal';
 import { CheckCircle2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import Image from 'next/image';
+import { cn } from '@/lib/utils';
 
 export default function InitiativesPage() {
   const db = useFirestore();
@@ -20,14 +19,14 @@ export default function InitiativesPage() {
 
   return (
     <div className="min-h-screen">
-      <AnimatedHero 
-        eyebrow="Our Initiatives"
-        heading="Programs That Transform Communities"
-        body="Our flagship initiatives are designed to create lasting impact by addressing healthcare, education, youth empowerment, and community development."
-        imageUrl="https://picsum.photos/seed/dibf-initiatives/1920/1080"
-        primaryCTA="View Projects"
-        primaryLink="#projects"
-      />
+      <section className="bg-secondary text-white py-24 text-center">
+        <div className="container mx-auto px-4 max-w-3xl space-y-6">
+          <h1 className="text-4xl md:text-6xl font-bold font-headline">Our Initiatives</h1>
+          <p className="text-xl text-white/70 leading-relaxed">
+            Our flagship initiatives are designed to create lasting impact by addressing healthcare, education, youth empowerment, and community development.
+          </p>
+        </div>
+      </section>
 
       <section id="projects" className="py-24 bg-white">
         <div className="container mx-auto px-4">
@@ -38,7 +37,7 @@ export default function InitiativesPage() {
           
           <div className="space-y-20">
             {initiatives.map((item, idx) => (
-              <RevealItem key={item.id} className={cn("grid grid-cols-1 lg:grid-cols-2 gap-16 items-center", idx % 2 === 1 && "lg:flex-row-reverse")}>
+              <div key={item.id} className={cn("grid grid-cols-1 lg:grid-cols-2 gap-16 items-center", idx % 2 === 1 && "lg:flex-row-reverse")}>
                 <div className={cn("space-y-8", idx % 2 === 1 && "lg:order-2")}>
                   <div className="space-y-4">
                     <span className="text-primary font-bold uppercase tracking-widest text-sm">{item.category}</span>
@@ -58,7 +57,7 @@ export default function InitiativesPage() {
                   )}
 
                   <Button asChild className="h-12 px-8 font-bold gap-2">
-                    <Link href={`/initiatives/${item.slug}`}>
+                    <Link href={`/initiatives/${item.slug || '#'}`}>
                       Learn More <ArrowRight className="w-4 h-4" />
                     </Link>
                   </Button>
@@ -66,13 +65,13 @@ export default function InitiativesPage() {
                 
                 <div className={cn("relative h-[450px] rounded-3xl overflow-hidden shadow-2xl", idx % 2 === 1 && "lg:order-1")}>
                   <Image 
-                    src={item.imageUrl || `https://picsum.photos/seed/${item.slug}/800/600`} 
+                    src={item.imageUrl || `https://picsum.photos/seed/${item.slug || idx}/800/600`} 
                     alt={item.title} 
                     fill 
                     className="object-cover"
                   />
                 </div>
-              </RevealItem>
+              </div>
             ))}
           </div>
         </div>
@@ -94,8 +93,4 @@ export default function InitiativesPage() {
       </section>
     </div>
   );
-}
-
-function cn(...classes: any[]) {
-  return classes.filter(Boolean).join(' ');
 }
