@@ -136,7 +136,94 @@ export default function AdminHub() {
         if (snap.empty) { await addDoc(collection(db, 'initiatives'), { ...item, createdAt: serverTimestamp() }); seeded++; } else skipped++;
       }
 
-      // 6. Impact Stories
+      // 6. Impact Store Items
+      const storeItems = [
+        {
+          title: "Eco-Bamboo Desk Set",
+          description: "Sustainable bamboo office accessories for the conscious professional.",
+          price: "$40.00",
+          category: "Office and lifestyle items",
+          imageUrl: "https://images.unsplash.com/photo-1591123120675-6f7f1aae0e5b?auto=format&fit=crop&q=80&w=800",
+          impactNote: "Supports sustainable office initiatives",
+          order: 1
+        },
+        {
+          title: "Wellness Hydration Bottle",
+          description: "Insulated stainless steel bottle to keep you hydrated on the go.",
+          price: "$30.00",
+          category: "Wellness and fitness products",
+          imageUrl: "https://images.unsplash.com/photo-1602143307185-8a1a558556e5?auto=format&fit=crop&q=80&w=800",
+          impactNote: "Funding for rural water projects",
+          order: 2
+        },
+        {
+          title: "Legacy Awareness Band",
+          description: "Representing collective responsibility in healthcare.",
+          price: "$10.00",
+          category: "Mental health awareness merchandise",
+          imageUrl: "https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&q=80&w=800",
+          impactNote: "Direct support for mental health outreaches",
+          order: 3
+        },
+        {
+          title: "Dollar-A-Day Campaign Band",
+          description: "Silicon awareness wristband representing collective generosity.",
+          price: "$5.00",
+          category: "Mental health awareness merchandise",
+          imageUrl: "https://images.unsplash.com/photo-1589156229687-496a31ad1d1f?auto=format&fit=crop&q=80&w=800",
+          impactNote: "Sustaining the Dollar-A-Day fund",
+          order: 4
+        },
+        {
+          title: "Hand-Woven Community Basket",
+          description: "Traditional African basket crafted by local women's cooperatives.",
+          price: "$65.00",
+          category: "Community-inspired products",
+          imageUrl: "https://images.unsplash.com/photo-1590595906931-81f04f0ccebb?auto=format&fit=crop&q=80&w=800",
+          impactNote: "Empowering rural women artisans",
+          order: 5
+        },
+        {
+          title: "Community Canvas Tote",
+          description: "Eco-friendly tote featuring local African artwork.",
+          price: "$20.00",
+          category: "Apparel and accessories",
+          imageUrl: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&q=80&w=800",
+          impactNote: "Supports local art programs",
+          order: 6
+        },
+        {
+          title: "Hand-Crafted Beaded Keyring",
+          description: "Intricate beadwork from women's cooperatives.",
+          price: "$15.00",
+          category: "Community-inspired products",
+          imageUrl: "https://images.unsplash.com/photo-1629198688000-71f23e745b6e?auto=format&fit=crop&q=80&w=800",
+          impactNote: "Direct beneficiary income generation",
+          order: 7
+        },
+        {
+          title: "Founder's Special Notebook",
+          description: "Gold-embossed journal for visionary thinkers.",
+          price: "$35.00",
+          category: "Office and lifestyle items",
+          imageUrl: "https://images.unsplash.com/photo-1531346878377-a5be20888e57?auto=format&fit=crop&q=80&w=800",
+          impactNote: "Scholarship fund contribution",
+          order: 8
+        }
+      ];
+
+      for (const item of storeItems) {
+        const q = query(collection(db, 'impactStore'), where('title', '==', item.title), limit(1));
+        const snap = await getDocs(q);
+        if (snap.empty) {
+          await addDoc(collection(db, 'impactStore'), { ...item, createdAt: serverTimestamp() });
+          seeded++;
+        } else {
+          skipped++;
+        }
+      }
+
+      // 7. Impact Stories
       const stories = [
         { title: "A New Clinical Hub in Ghana", summary: "How the Tinewonsa Project transformed rural healthcare in the Ashanti region.", beneficiary: "Village of Ejisu", featured: true, category: "Healthcare", imageUrl: "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=800" }
       ];
@@ -179,7 +266,7 @@ export default function AdminHub() {
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
              <Card><CardHeader><CardTitle className="text-sm">Initiatives</CardTitle></CardHeader><CardContent className="text-3xl font-bold">4</CardContent></Card>
              <Card><CardHeader><CardTitle className="text-sm">Focus Areas</CardTitle></CardHeader><CardContent className="text-3xl font-bold">4</CardContent></Card>
-             <Card><CardHeader><CardTitle className="text-sm">Site Content (CMS)</CardTitle></CardHeader><CardContent className="text-3xl font-bold">3</CardContent></Card>
+             <Card><CardHeader><CardTitle className="text-sm">Store Items</CardTitle></CardHeader><CardContent className="text-3xl font-bold">8</CardContent></Card>
              <Card><CardHeader><CardTitle className="text-sm">Hero Slides</CardTitle></CardHeader><CardContent className="text-3xl font-bold">3</CardContent></Card>
           </div>
         </TabsContent>

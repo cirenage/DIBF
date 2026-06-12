@@ -8,7 +8,7 @@ import { SectionHeader } from '@/components/shared/SectionHeader';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingBag, Heart, Sparkles, BrainCircuit, Shirt, ShoppingCart, Filter, Search, ArrowRight } from 'lucide-react';
+import { ShoppingBag, Heart, Sparkles, BrainCircuit, Shirt, ShoppingCart, Filter, Search, Palette } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { RevealItem } from '@/components/shared/ScrollReveal';
@@ -31,6 +31,7 @@ export default function ImpactStorePage() {
     { name: "Apparel and accessories", icon: Shirt },
     { name: "Office and lifestyle items", icon: ShoppingBag },
     { name: "Wellness and fitness products", icon: Heart },
+    { name: "Community-inspired products", icon: Palette },
   ];
 
   const filteredItems = items.filter(item => {
@@ -115,7 +116,7 @@ export default function ImpactStorePage() {
             <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-muted">
               <ShoppingCart className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
               <p className="text-muted-foreground font-medium mb-4">No products found in this collection.</p>
-              <p className="text-sm text-muted-foreground mb-6">If you are the admin, please visit /admin and click "Seed All Website Data".</p>
+              <p className="text-sm text-muted-foreground mb-6">If you are the admin, please visit /admin and click "Seed Website Data".</p>
               <Button variant="outline" onClick={() => {setActiveCategory('All'); setSearchQuery('');}}>Clear Filters</Button>
             </div>
           ) : (
@@ -123,12 +124,13 @@ export default function ImpactStorePage() {
               {filteredItems.map((item, idx) => (
                 <RevealItem key={item.id || idx}>
                   <Card className="group h-full flex flex-col border-none shadow-lg hover:shadow-2xl transition-all duration-500 rounded-2xl overflow-hidden bg-white">
-                    <div className="relative h-64 overflow-hidden">
+                    <div className="relative h-64 overflow-hidden bg-muted">
                       <Image 
                         src={item.imageUrl || "https://picsum.photos/seed/dibf-product/600/600"} 
                         alt={item.title} 
                         fill 
                         className="object-cover group-hover:scale-110 transition-transform duration-700"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                       />
                       <div className="absolute top-4 left-4">
                         <Badge className="bg-primary/90 text-white backdrop-blur-sm shadow-sm">{item.category}</Badge>
