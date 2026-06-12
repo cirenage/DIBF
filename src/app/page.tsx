@@ -28,11 +28,11 @@ export default function HomePage() {
   const { data: featuredStories } = useCollection(storyQuery);
   const featuredStory = featuredStories?.[0];
 
-  // Initiatives
-  const initiativesQuery = useMemoFirebase(() => db ? query(collection(db, 'initiatives'), where('featured', '==', true), limit(4)) : null, [db]);
+  // Initiatives - Show all initiatives instead of just 4
+  const initiativesQuery = useMemoFirebase(() => db ? query(collection(db, 'initiatives'), orderBy('order', 'asc')) : null, [db]);
   const { data: initiatives } = useCollection(initiativesQuery);
 
-  // Focus Areas (What We Do)
+  // Focus Areas (What We Do) - Limited to top 4 as per design guidelines
   const focusAreasQuery = useMemoFirebase(() => db ? query(collection(db, 'focusAreas'), orderBy('order', 'asc'), limit(4)) : null, [db]);
   const { data: focusAreas } = useCollection(focusAreasQuery);
 
@@ -54,14 +54,14 @@ export default function HomePage() {
       <section className="py-24 bg-muted/30">
         <div className="container mx-auto px-4">
           <SectionHeader 
-            title="Featured Initiatives" 
+            title="Our Initiatives" 
             subtitle="Strategic programs designed to create lasting transformation in healthcare and community development."
           />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {initiatives.map((item, idx) => (
-              <Link href="/initiatives" key={item.id || idx} className="group">
-                <Card className="h-full border-none shadow-lg group-hover:shadow-2xl transition-all duration-500 overflow-hidden flex flex-col relative aspect-[4/5] sm:aspect-auto sm:h-[400px]">
+              <Link href="/initiatives" key={item.id || idx} className="group h-full">
+                <Card className="h-full border-none shadow-lg group-hover:shadow-2xl transition-all duration-500 overflow-hidden flex flex-col relative min-h-[400px]">
                   <Image 
                     src={item.imageUrl || `https://picsum.photos/seed/init-${idx}/600/800`} 
                     alt={item.title} 
@@ -70,7 +70,7 @@ export default function HomePage() {
                     data-ai-hint="foundation project"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-secondary via-secondary/20 to-transparent" />
-                  <div className="absolute bottom-0 left-0 p-6 space-y-2 text-white">
+                  <div className="absolute bottom-0 left-0 p-6 space-y-2 text-white w-full">
                     <h3 className="text-xl font-bold">{item.title}</h3>
                     <p className="text-sm text-white/70 line-clamp-2 leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                       {item.summary}
@@ -85,6 +85,15 @@ export default function HomePage() {
               </Link>
             ))}
           </div>
+          
+          {initiatives.length === 0 && (
+            <div className="text-center py-12 bg-white rounded-2xl border-2 border-dashed border-muted">
+              <p className="text-muted-foreground">No initiatives found. Please visit the Admin Hub to seed data.</p>
+              <Button asChild variant="outline" className="mt-4">
+                <Link href="/admin">Go to Admin Hub</Link>
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 
