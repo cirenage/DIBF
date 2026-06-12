@@ -92,31 +92,16 @@
         "publishedAt": { "type": "string", "format": "date-time" }
       }
     },
-    "ImpactStory": {
-      "title": "Impact Story",
-      "description": "Real-world stories of foundation impact.",
+    "NewsletterSubscription": {
+      "title": "Newsletter Subscription",
+      "description": "A user's request to receive updates.",
       "type": "object",
       "properties": {
-        "title": { "type": "string" },
-        "beneficiary": { "type": "string" },
-        "location": { "type": "string" },
-        "summary": { "type": "string" },
-        "story": { "type": "string" },
-        "imageUrl": { "type": "string" },
-        "category": { "type": "string" },
-        "featured": { "type": "boolean" }
-      }
-    },
-    "Partner": {
-      "title": "Partner",
-      "description": "Collaborating organization.",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "logoUrl": { "type": "string" },
-        "type": { "type": "string" },
-        "description": { "type": "string" }
-      }
+        "email": { "type": "string", "format": "email" },
+        "subscribedAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["active", "unsubscribed"] }
+      },
+      "required": ["email", "subscribedAt"]
     }
   },
   "auth": {
@@ -130,8 +115,9 @@
     "/initiatives/{id}": { "schema": "Initiative", "description": "Foundation programs" },
     "/impactStore/{id}": { "schema": "ImpactStoreItem", "description": "Purpose-driven products" },
     "/news/{id}": { "schema": "NewsPost", "description": "Foundation news and insights" },
-    "/impactStories/{id}": { "schema": "ImpactStory", "description": "Stories of community change" },
-    "/partners/{id}": { "schema": "Partner", "description": "Global collaborators" },
+    "/newsletterSubscriptions/{id}": { "schema": "NewsletterSubscription", "description": "User email subscriptions" },
+    "/impactStories/{id}": { "schema": "object", "description": "Stories of community change" },
+    "/partners/{id}": { "schema": "object", "description": "Global collaborators" },
     "/donations/{id}": { "schema": "object", "description": "Donation intent records" },
     "/contactMessages/{id}": { "schema": "object", "description": "Contact form submissions" }
   }
