@@ -1,16 +1,17 @@
+
 "use client";
 
 import * as React from 'react';
 import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
-import { collection, doc, query, where, limit, orderBy } from 'firebase/firestore';
-import { Hero } from '@/components/home/Hero';
+import { collection, doc, query, where, limit } from 'firebase/firestore';
+import { AnimatedHero } from '@/components/shared/AnimatedHero';
 import { SectionHeader } from '@/components/shared/SectionHeader';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, Heart, Globe, Sprout, Target, Eye, ShieldCheck, Zap } from 'lucide-react';
+import { ArrowRight, Target, Eye } from 'lucide-react';
 import { ScrollReveal, RevealItem } from '@/components/shared/ScrollReveal';
 
 export default function HomePage() {
@@ -24,13 +25,18 @@ export default function HomePage() {
   const initiativesQuery = useMemoFirebase(() => db ? query(collection(db, 'initiatives'), where('featured', '==', true), limit(3)) : null, [db]);
   const { data: initiatives } = useCollection(initiativesQuery);
 
-  // Impact Stories
-  const storiesQuery = useMemoFirebase(() => db ? query(collection(db, 'impactStories'), where('featured', '==', true), limit(3)) : null, [db]);
-  const { data: stories } = useCollection(storiesQuery);
-
   return (
     <div className="space-y-0">
-      <Hero data={hero} />
+      <AnimatedHero 
+        eyebrow={hero?.eyebrow || "Healing Communities. Empowering Futures."}
+        heading={hero?.heading || "Advancing Health, Human Dignity, and Sustainable Development"}
+        body={hero?.body || "DIBF is the nonprofit and social impact arm of Doctors in Business Global, dedicated to health equity and sustainable development across Africa."}
+        imageUrl={hero?.imageUrl || "https://picsum.photos/seed/dibf-hero/1920/1080"}
+        primaryCTA={hero?.primaryCTA || "Get Involved"}
+        primaryLink={hero?.primaryLink || "/get-involved"}
+        secondaryCTA={hero?.secondaryCTA || "Learn More"}
+        secondaryLink={hero?.secondaryLink || "/about"}
+      />
 
       {/* Stats Section */}
       <section className="py-12 bg-secondary text-white">
@@ -141,8 +147,8 @@ export default function HomePage() {
       <section className="py-20 bg-primary text-white overflow-hidden relative">
         <div className="absolute top-0 right-0 w-1/3 h-full bg-accent/20 skew-x-12 translate-x-1/2" />
         <div className="container mx-auto px-4 relative z-10 text-center space-y-8">
-          <h2 className="text-3xl md:text-5xl font-bold">Ready to be part of the change?</h2>
-          <p className="text-xl text-white/80 max-w-2xl mx-auto">
+          <h2 className="text-3xl md:text-5xl font-bold font-headline">Ready to be part of the change?</h2>
+          <p className="text-xl text-white/80 max-w-2xl mx-auto font-body">
             Your involvement helps us advance health, human dignity, and sustainable development across Africa.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
