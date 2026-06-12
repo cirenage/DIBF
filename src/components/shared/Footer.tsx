@@ -1,12 +1,48 @@
+
 "use client";
 
+import * as React from 'react';
 import Link from 'next/link';
-import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, Heart, Send } from 'lucide-react';
+import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, Heart, Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useFirestore } from '@/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const db = useFirestore();
+  const { toast } = useToast();
+  const [email, setEmail] = React.useState('');
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !db || isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      await addDoc(collection(db, 'newsletterSubscriptions'), {
+        email,
+        subscribedAt: serverTimestamp(),
+        status: 'active'
+      });
+      toast({
+        title: "Subscribed!",
+        description: "Thank you for joining our community. We'll keep you updated on our impact.",
+      });
+      setEmail('');
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Subscription failed",
+        description: "We couldn't process your request. Please try again later.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <footer className="bg-secondary text-white pt-20 pb-10">
@@ -59,10 +95,24 @@ export function Footer() {
           <div className="space-y-6">
             <h3 className="font-bold text-lg border-l-4 border-primary pl-3">Get Updates</h3>
             <p className="text-xs text-white/50 italic">Join our community for impact updates and news.</p>
-            <div className="flex gap-2">
-              <Input placeholder="Email Address" className="bg-white/5 border-white/10 text-white" />
-              <Button size="icon" className="shrink-0"><Send className="w-4 h-4" /></Button>
-            </div>
+            <form onSubmit={handleSubscribe} className="flex gap-2">
+              <Input 
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email Address" 
+                className="bg-white/5 border-white/10 text-white placeholder:text-white/30" 
+              />
+              <Button 
+                type="submit" 
+                size="icon" 
+                disabled={isSubmitting}
+                className="shrink-0"
+              >
+                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              </Button>
+            </form>
             <Button asChild className="w-full gap-2 font-bold" variant="default">
               <Link href="/give">
                 <Heart className="w-4 h-4 fill-current" />
