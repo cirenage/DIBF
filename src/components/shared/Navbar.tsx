@@ -53,6 +53,7 @@ const NAV_GROUPS = [
       { href: '/partnerships', label: 'Partner With Us' },
       { href: '/get-involved', label: 'Bring a Team' },
       { href: '/get-involved', label: 'Support a Campaign' },
+	  { href: '/impact-store', label: 'Impact Store' },
     ]
   }
 ];
