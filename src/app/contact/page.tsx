@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCart } from '@/hooks/use-cart';
 import { Separator } from '@/components/ui/separator';
 import Image from 'next/image';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 
 const ContactSchema = z.object({
@@ -29,7 +29,93 @@ const ContactSchema = z.object({
   message: z.string().min(10, "Message must be at least 10 characters"),
 });
 
-export default function ContactPage() {
+const NewsletterSchema = z.object({
+  email: z.string().email("Invalid email address"),
+});
+
+function NewsletterSubscriptionForm() {
+  const { toast } = useToast();
+  const db = useFirestore();
+
+  const form = useForm<z.infer<typeof NewsletterSchema>>({
+    resolver: zodResolver(NewsletterSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
+  async function onSubmit(data: z.infer<typeof NewsletterSchema>) {
+    if (!db) return;
+    try {
+      // Check for existing subscriber
+      const q = query(collection(db, "newsletterSubscribers"), where("email", "==", data.email));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        toast({
+          variant: "default",
+          title: "Already Subscribed",
+          description: "This email is already on our mailing list.",
+        });
+        return;
+      }
+      
+      await addDoc(collection(db, "newsletterSubscribers"), {
+        email: data.email,
+        status: "active",
+        source: "Website Contact Form",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      toast({
+        title: "Subscription Successful!",
+        description: "Thank you for subscribing to DIB Foundation updates.",
+      });
+      form.reset();
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to subscribe. Please try again.",
+      });
+    }
+  }
+
+  return (
+    <div className="container mx-auto px-4 mt-12">
+        <Card className="shadow-lg border-none">
+          <CardHeader>
+            <CardTitle className="text-2xl font-headline font-bold text-secondary">Subscribe to Our Newsletter</CardTitle>
+            <CardDescription>Get the latest updates from the DIB Foundation directly in your inbox.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem className="flex-grow">
+                      <FormControl>
+                        <Input placeholder="Enter your email" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" className="font-bold">
+                  Subscribe
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+      </div>
+  );
+}
+
+function ContactForm() {
   const { toast } = useToast();
   const db = useFirestore();
   const searchParams = useSearchParams();
@@ -195,5 +281,15 @@ export default function ContactPage() {
         </div>
       </div>
     </div>
-  );
+  )
+}
+
+
+export default function ContactPage() {
+  return (
+    <React.Suspense fallback={<div>Loading...</div>}>
+      <ContactForm />
+      <NewsletterSubscriptionForm />
+    </React.Suspense>
+  )
 }
